@@ -1,11 +1,11 @@
 /**
- * ホーム＝「わり算ランド」。モジュールをカードで選ぶ。
+ * ホーム＝「倍の見方ラボ」。モジュールをカードで選ぶ。
  * 視覚的混沌を避けるため、余白を広く・1カード1テーマに。
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Divide, Zap, Compass, CheckCheck, Scale, Search, BookOpen,
+  Sprout, Divide, X, Undo2, Scale, Search, BookOpen,
   History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame,
 } from 'lucide-react';
 import { MODULES, ModuleMeta } from '../constants';
@@ -21,17 +21,18 @@ interface Props {
 }
 
 const ICONS: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Divide, Zap, Compass, CheckCheck, Scale, Search, BookOpen,
+  Sprout, Divide, X, Undo2, Scale, Search, BookOpen,
 };
 
 // Tailwind がパージしないよう静的に定義
 const ACCENT: Record<string, { bg: string; text: string; ring: string }> = {
+  sky: { bg: 'bg-sky-50', text: 'text-sky-600', ring: 'group-hover:ring-sky-300' },
   blue: { bg: 'bg-blue-50', text: 'text-blue-600', ring: 'group-hover:ring-blue-300' },
   emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', ring: 'group-hover:ring-emerald-300' },
   violet: { bg: 'bg-violet-50', text: 'text-violet-600', ring: 'group-hover:ring-violet-300' },
   amber: { bg: 'bg-amber-50', text: 'text-amber-600', ring: 'group-hover:ring-amber-300' },
   rose: { bg: 'bg-rose-50', text: 'text-rose-600', ring: 'group-hover:ring-rose-300' },
-  cyan: { bg: 'bg-cyan-50', text: 'text-cyan-600', ring: 'group-hover:ring-cyan-300' },
+  fuchsia: { bg: 'bg-fuchsia-50', text: 'text-fuchsia-600', ring: 'group-hover:ring-fuchsia-300' },
   teal: { bg: 'bg-teal-50', text: 'text-teal-600', ring: 'group-hover:ring-teal-300' },
 };
 
@@ -120,10 +121,10 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest })
           </div>
           <div className="flex items-center justify-center gap-3">
             <h1 className="text-4xl md:text-5xl font-black text-content tracking-tight">
-              わり算の筆算<span className="text-blue-600">ラボEX</span>
+              倍の見方<span className="text-blue-600">ラボ</span>
             </h1>
           </div>
-          <p className="text-muted font-medium mt-2">たてる・かける・ひく・おろす を マスターしよう！</p>
+          <p className="text-muted font-medium mt-2">もとにする量・倍・くらべられる量を マスターしよう！</p>
         </div>
 
         {/* 本番テストモード */}
@@ -138,7 +139,7 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest })
           </div>
           <div className="flex-1">
             <div className="text-xl font-black">📝 本番テストモード</div>
-            <div className="text-sm text-white/85 font-medium">「わり算の筆算」を テストと同じ 問題数で ちょうせん！</div>
+            <div className="text-sm text-white/85 font-medium">「倍の見方」を テストと同じ 問題数で ちょうせん！</div>
           </div>
           <ChevronRight size={28} className="shrink-0 opacity-80" />
         </motion.button>

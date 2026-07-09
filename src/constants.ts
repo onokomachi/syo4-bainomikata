@@ -1,33 +1,8 @@
-import { Difficulty } from './types';
 import { ModuleId } from './store/progressStore';
 
-/** 筆算シミュレーターのレベル定義（既存） */
-export const LEVEL_CONFIG: Record<Difficulty, { label: string; description: string }> = {
-  '2-1': {
-    label: '2けた ÷ 1けた',
-    description: 'まずはここから！基本の筆算。'
-  },
-  '3-1': {
-    label: '3けた ÷ 1けた',
-    description: '少し長くなります。丁寧にやりましょう。'
-  },
-  '2-2': {
-    label: '2けた ÷ 2けた',
-    description: '「たてる」数の見当をつけよう。'
-  },
-  '3-2': {
-    label: '3けた ÷ 2けた',
-    description: '4年生のクライマックス！'
-  },
-  '3-3': {
-    label: '3けた ÷ 3けた',
-    description: '大きなわる数も 見当づけで たおせる！'
-  }
-};
-
 /**
- * 「わり算ランド」のモジュール一覧。
- * 単元「わり算の筆算（÷1けた・÷2けた）」で身につける知識・技能を段階的に網羅する。
+ * 「倍の見方ラボ」のモジュール一覧。
+ * 単元「倍の見方（小4）」で身につける知識・技能を段階的に網羅する。
  */
 export interface ModuleMeta {
   id: ModuleId;
@@ -42,49 +17,49 @@ export interface ModuleMeta {
 
 export const MODULES: ModuleMeta[] = [
   {
-    id: 'mental',
-    title: 'あんざん わり算',
-    description: '九九・何十・何百のわり算を すばやく！',
-    icon: 'Zap',
-    accent: 'amber',
+    id: 'kihon',
+    title: '基礎：倍の見方',
+    description: 'もとにする量・倍・くらべられる量の 関係を おぼえよう',
+    icon: 'Sprout',
+    accent: 'sky',
     status: 'ready',
   },
   {
-    id: 'hissan',
-    title: '筆算シミュレーター',
-    description: 'たてる・かける・ひく・おろす をマスター',
+    id: 'times',
+    title: '何倍かを もとめる',
+    description: 'くらべられる量 ÷ もとにする量 ＝ 倍',
     icon: 'Divide',
     accent: 'blue',
     status: 'ready',
   },
   {
-    id: 'estimate',
-    title: '商の見当づけ',
-    description: 'どの位に たつ？いくつ たつ？',
-    icon: 'Compass',
-    accent: 'violet',
-    status: 'ready',
-  },
-  {
-    id: 'check',
-    title: 'たしかめ算',
-    description: 'わる数×商＋あまり で かくにん',
-    icon: 'CheckCheck',
+    id: 'compare',
+    title: '何倍かにあたる量',
+    description: 'もとにする量 × 倍 ＝ くらべられる量',
+    icon: 'X',
     accent: 'emerald',
     status: 'ready',
   },
   {
-    id: 'rules',
-    title: 'わり算のきまり',
-    description: '同じ数で わっても 商は 同じ！',
+    id: 'base',
+    title: 'もとにする量',
+    description: 'くらべられる量 ÷ 倍 ＝ もとにする量',
+    icon: 'Undo2',
+    accent: 'violet',
+    status: 'ready',
+  },
+  {
+    id: 'ratio-compare',
+    title: '割合で くらべる',
+    description: '差ではなく 倍で 2つを くらべよう',
     icon: 'Scale',
-    accent: 'cyan',
+    accent: 'fuchsia',
     status: 'ready',
   },
   {
     id: 'word-problem',
     title: 'ことばの もんだい',
-    description: 'あまりを どうする？ しきを 考えよう',
+    description: 'どんな関係かな？ しきを 考えよう',
     icon: 'BookOpen',
     accent: 'teal',
     status: 'ready',

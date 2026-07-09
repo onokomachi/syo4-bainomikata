@@ -1,18 +1,17 @@
 /**
- * ことばの もんだい（わり算の文章題）モジュール。
- * ①しきを選ぶ（等分除・包含除のスキーマ）→ ②商とあまりを計算 →
- * ③（切り上げ/切り捨てのときは）あまりを どうするか考えて 最終の答え、の段階入力。
- * テスト裏面（思考・判断・表現）で最頻出の「あまりの処理」を重点的にあつかう。
+ * ことばの もんだい（倍の見方の文章題）モジュール。
+ * ①どんな関係（何倍／比較量／基準量の どれを求めるか）かを 選択肢から選ぶ →
+ * ②計算する、の2段階入力。割合で くらべる文章題（wp-ratio）だけは
+ * 「Aの倍→Bの倍→どちらが大きいか」の流れになる。
  */
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Check, Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
 import { AdaptiveBar } from '../shared/AdaptiveBar';
-import { QuotRemEntry } from '../shared/QuotRemEntry';
 import { AnswerEntry } from '../shared/AnswerEntry';
 import { HintBox, ResultPanel, SetupScreen, LevelCard } from '../ui/primitives';
-import { WORD_LEVELS, WordLevel, DivWordProblem, generateWord } from '../../lib/problems';
+import { WORD_LEVELS, WordLevel, BaiWordProblem, generateWord } from '../../lib/problems';
 import { useProgressStore } from '../../store/progressStore';
 import { useAdaptive } from '../../lib/useAdaptive';
 import { playClear, playCorrect, playSoftTry } from '../../lib/sound';
@@ -23,7 +22,7 @@ const LEVEL_IDS = WORD_LEVELS.map((l) => l.id);
 
 export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
   const [mode, setMode] = useState<'setup' | 'level' | 'auto'>('setup');
-  const [level, setLevel] = useState<WordLevel>('wp-share');
+  const [level, setLevel] = useState<WordLevel>('wp-times');
   const [round, setRound] = useState(0);
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
@@ -31,7 +30,7 @@ export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
 
   if (mode === 'setup') {
     return (
-      <SetupScreen title="ことばの もんだい" subtitle="しき → 計算 → あまりを どうする？" onBack={onExit}>
+      <SetupScreen title="ことばの もんだい" subtitle="どんな関係かな？ → しき → 計算" onBack={onExit}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {WORD_LEVELS.map((l) => (
             <LevelCard
@@ -78,20 +77,19 @@ export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
 
 export const WordRound: React.FC<{
   level: WordLevel;
-  problem?: DivWordProblem;
+  problem?: BaiWordProblem;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
   nextLabel?: string;
 }> = ({ level, problem: given, onNext, onResult, nextLabel }) => {
-  const [problem] = useState<DivWordProblem>(() => given ?? generateWord(level));
-  const needsFinal = problem.finalKind === 'up' || problem.finalKind === 'down';
-  const [stage, setStage] = useState<'shiki' | 'calc' | 'final' | 'done'>('shiki');
+  const [problem] = useState<BaiWordProblem>(() => given ?? generateWord(level));
+  const isRatio = problem.kind === 'ratio';
+  const [stage, setStage] = useState<'shiki' | 'calc' | 'timesA' | 'timesB' | 'judge' | 'done'>(isRatio ? 'timesA' : 'shiki');
   const [pickedWrong, setPickedWrong] = useState<number | null>(null);
+  const [pickedJudge, setPickedJudge] = useState<'A' | 'B' | null>(null);
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
-
-  const withRemainder = problem.remainder > 0;
 
   const finish = () => {
     playClear();
@@ -116,39 +114,52 @@ export const WordRound: React.FC<{
       playSoftTry();
       setMistakes((m) => m + 1);
       setPickedWrong(i);
-      setHint('ようすを 思いうかべよう。「ぜんぶの数」を「1つ分の数（または 人数）」で 分けるのが わり算だよ。');
+      setHint('ようすを 思いうかべよう。「もとにする量」と「くらべられる量」の どちらを 求めるかで、しきが 決まるよ。');
     }
   };
 
-  const submitCalc = (q: string, r: string) => {
-    const okQ = Number(q) === problem.quotient;
-    const okR = !withRemainder || Number(r || '0') === problem.remainder;
-    if (okQ && okR) {
-      if (needsFinal) {
-        playCorrect();
-        setHint(`計算は ${problem.dividend} ÷ ${problem.divisor} = ${problem.quotient} あまり ${problem.remainder}。では、${problem.finalPrompt}`);
-        setStage('final');
-      } else {
-        finish();
-      }
-    } else {
-      playSoftTry();
-      setMistakes((m) => m + 1);
-      setHint(`しきは ${problem.dividend} ÷ ${problem.divisor} だね。筆算で ていねいに 計算してみよう。${withRemainder ? 'あまりも わすれずに。' : ''}`);
-    }
-  };
-
-  const submitFinal = (v: string) => {
+  const submitCalc = (v: string) => {
     if (Number(v) === problem.finalAnswer) {
       finish();
     } else {
       playSoftTry();
       setMistakes((m) => m + 1);
-      setHint(
-        problem.finalKind === 'up'
-          ? `あまりの 分は どうなるかな？ あまりの 分も 入れられるように、商より 1 大きい数に しよう。`
-          : `あまりの 分だけでは 1つ 作れないね。あまりは 切り捨てて、商が そのまま 答えに なるよ。`
-      );
+      setHint(`しきは ${problem.choices![problem.correctIndex!]} だね。ていねいに 計算してみよう。`);
+    }
+  };
+
+  const submitTimesA = (v: string) => {
+    if (Number(v) === problem.timesA) {
+      playCorrect();
+      setHint(null);
+      setStage('timesB');
+    } else {
+      playSoftTry();
+      setMistakes((m) => m + 1);
+      setHint(`${problem.pair?.itemA}は ${problem.beforeA}${problem.pair?.unit} → ${problem.afterA}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
+    }
+  };
+
+  const submitTimesB = (v: string) => {
+    if (Number(v) === problem.timesB) {
+      playCorrect();
+      setHint(problem.why);
+      setStage('judge');
+    } else {
+      playSoftTry();
+      setMistakes((m) => m + 1);
+      setHint(`${problem.pair?.itemB}は ${problem.beforeB}${problem.pair?.unit} → ${problem.afterB}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
+    }
+  };
+
+  const chooseJudge = (label: 'A' | 'B') => {
+    if (label === problem.biggerLabel) {
+      finish();
+    } else {
+      playSoftTry();
+      setMistakes((m) => m + 1);
+      setPickedJudge(label);
+      setHint(`倍の 大きさで くらべよう。${problem.pair?.itemA}は ${problem.timesA}倍、${problem.pair?.itemB}は ${problem.timesB}倍だよ。`);
     }
   };
 
@@ -163,13 +174,13 @@ export const WordRound: React.FC<{
           </div>
         </div>
 
-        {hint && <HintBox tone={pickedWrong !== null && stage === 'shiki' ? 'wrong' : 'hint'}>{hint}</HintBox>}
+        {hint && <HintBox tone={(pickedWrong !== null && stage === 'shiki') || pickedJudge ? 'wrong' : 'hint'}>{hint}</HintBox>}
 
-        {stage === 'shiki' && (
+        {!isRatio && stage === 'shiki' && (
           <div>
             <p className="text-center text-muted font-black mb-3">どの「しき」に なるかな？</p>
             <div className="grid grid-cols-1 gap-3">
-              {problem.choices.map((c, i) => (
+              {problem.choices!.map((c, i) => (
                 <button
                   key={i}
                   onClick={() => chooseShiki(i)}
@@ -184,24 +195,42 @@ export const WordRound: React.FC<{
           </div>
         )}
 
-        {stage === 'calc' && (
+        {!isRatio && stage === 'calc' && (
           <div>
             <div className="flex items-center justify-center gap-2 mb-3">
               <Check className="text-emerald-500" size={22} />
-              <p className="text-center text-content font-black text-xl tabular-nums">しき：{problem.dividend} ÷ {problem.divisor}</p>
+              <p className="text-center text-content font-black text-xl tabular-nums">しき：{problem.choices![problem.correctIndex!]}</p>
             </div>
-            <p className="text-center text-muted font-bold mb-3">
-              {withRemainder ? '商と あまりを 計算しよう' : 'こたえを 計算しよう'}
-            </p>
-            <QuotRemEntry withRemainder={withRemainder} onSubmit={submitCalc} />
+            <p className="text-center text-muted font-bold mb-3">{problem.finalPrompt}（たんい：{problem.finalUnit}）</p>
+            <AnswerEntry onSubmit={submitCalc} allowDecimal={false} accentText="text-teal-600" />
           </div>
         )}
 
-        {stage === 'final' && (
+        {isRatio && stage === 'timesA' && (
           <div>
-            <p className="text-center text-content font-black text-xl mb-3">{problem.finalPrompt}</p>
-            <p className="text-center text-muted font-bold mb-3">あまりを どうするか、ようすを 思いうかべて 答えよう（たんい：{problem.finalUnit}）</p>
-            <AnswerEntry onSubmit={submitFinal} allowDecimal={false} accentText="text-teal-600" />
+            <p className="text-center text-muted font-black mb-3">{problem.pair?.itemA}は もとの 何倍に なりましたか？</p>
+            <AnswerEntry onSubmit={submitTimesA} allowDecimal={false} accentText="text-teal-600" />
+          </div>
+        )}
+
+        {isRatio && stage === 'timesB' && (
+          <div>
+            <p className="text-center text-muted font-black mb-3">{problem.pair?.itemB}は もとの 何倍に なりましたか？</p>
+            <AnswerEntry onSubmit={submitTimesB} allowDecimal={false} accentText="text-teal-600" />
+          </div>
+        )}
+
+        {isRatio && stage === 'judge' && (
+          <div>
+            <p className="text-center text-content font-black text-xl mb-4">よく のびた（かわった）のは どちら？</p>
+            <div className="flex justify-center gap-4">
+              <button onClick={() => chooseJudge('A')} className={`flex items-center gap-2 px-8 py-5 rounded-2xl border-2 font-black text-xl active:scale-95 transition-all ${pickedJudge === 'A' ? 'bg-amber-50 border-amber-300 text-amber-500' : 'bg-surface border-line text-content hover:border-teal-400'}`}>
+                {problem.pair?.emojiA} {problem.pair?.itemA}
+              </button>
+              <button onClick={() => chooseJudge('B')} className={`flex items-center gap-2 px-8 py-5 rounded-2xl border-2 font-black text-xl active:scale-95 transition-all ${pickedJudge === 'B' ? 'bg-amber-50 border-amber-300 text-amber-500' : 'bg-surface border-line text-content hover:border-teal-400'}`}>
+                {problem.pair?.emojiB} {problem.pair?.itemB}
+              </button>
+            </div>
           </div>
         )}
 
