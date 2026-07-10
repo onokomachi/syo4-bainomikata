@@ -79,58 +79,58 @@
     --panel-strong: rgba(120, 40, 85, 0.85);
   }
 
-  /* インフェルノ = 業火：黒曜石の闇 × 立ちのぼる火の粉 × 深紅の炎。バッジ75%で解放 */
-  body[data-theme='inferno'] {
-    --c-bg: #0a0100;
-    --c-surface: #180502;
-    --c-surface-2: #0c0200;
-    --c-surface-3: #240903;
-    --c-content: #ffb37a;
-    --c-muted: #e0713a;
-    --c-faint: #9c4a22;
-    --c-line: #86341a;
-    --c-brand: #ff5a1f;
-    --c-brand-strong: #ff9558;
-    --c-on-brand: #1c0500;
-    --neon: 255, 100, 30;
-    --panel: #1c0703;
-    --panel-strong: rgba(130, 40, 5, 0.85);
+  /* バブル = シャボン玉：夜の水そう × ゆらゆらのぼる玉 × 水色のきらめき。バッジ25%で解放 */
+  body[data-theme='bubble'] {
+    --c-bg: #021b24;
+    --c-surface: #042733;
+    --c-surface-2: #01141c;
+    --c-surface-3: #0b3542;
+    --c-content: #d6faff;
+    --c-muted: #8fe0e8;
+    --c-faint: #5aa8b0;
+    --c-line: #2c6672;
+    --c-brand: #35e0ff;
+    --c-brand-strong: #8ff2ff;
+    --c-on-brand: #002026;
+    --neon: 80, 220, 255;
+    --panel: #062b36;
+    --panel-strong: rgba(10, 70, 85, 0.85);
   }
 
-  /* 天空神（てんくうしん）= 神々の空：黄昏の大空 × 金色の光条 × 流れる雲。バッジ100%で解放 */
-  body[data-theme='tenkuu'] {
-    --c-bg: #041022;
-    --c-surface: #0a1c34;
-    --c-surface-2: #030b1a;
-    --c-surface-3: #12294a;
-    --c-content: #ffe9a8;
-    --c-muted: #a8cbe8;
-    --c-faint: #6d8fb5;
-    --c-line: #3c608c;
-    --c-brand: #ffd24a;
-    --c-brand-strong: #ffe58f;
-    --c-on-brand: #221a00;
-    --neon: 255, 215, 120;
-    --panel: #081a30;
-    --panel-strong: rgba(60, 100, 160, 0.82);
+  /* スノーワールド = 雪結晶：群青の雪夜 × 舞い落ちる6角の結晶 × 月あかり。バッジ75%で解放 */
+  body[data-theme='snow'] {
+    --c-bg: #071322;
+    --c-surface: #0d2038;
+    --c-surface-2: #050d1a;
+    --c-surface-3: #16305a;
+    --c-content: #eaf6ff;
+    --c-muted: #b8d8f2;
+    --c-faint: #7ea3c4;
+    --c-line: #3a5a80;
+    --c-brand: #8fd0ff;
+    --c-brand-strong: #d0ecff;
+    --c-on-brand: #06192c;
+    --neon: 150, 210, 255;
+    --panel: #0c2340;
+    --panel-strong: rgba(40, 80, 130, 0.85);
   }
 
-  /* 極光（きょっこう）= オーロラ：北極の夜空 × 緑＋紫の光のカーテン。バッジ75%で解放 */
-  body[data-theme='aurora'] {
-    --c-bg: #020309;
-    --c-surface: #060c16;
-    --c-surface-2: #02040a;
-    --c-surface-3: #0c1426;
-    --c-content: #b6ffc8;
-    --c-muted: #79e0c4;
-    --c-faint: #569aa0;
-    --c-line: #2f7a72;
-    --c-brand: #c56bff;
-    --c-brand-strong: #e3b0ff;
-    --c-on-brand: #0a0420;
-    --neon: 120, 255, 170;
-    --panel: #070e1a;
-    --panel-strong: rgba(70, 35, 110, 0.82);
+  /* 万華鏡（かれいきょう）：闇の底から広がる レインボーの放射もよう。バッジ100%で解放 */
+  body[data-theme='kaleido'] {
+    --c-bg: #05010c;
+    --c-surface: #0f0620;
+    --c-surface-2: #070312;
+    --c-surface-3: #180a30;
+    --c-content: #ffe8ff;
+    --c-muted: #e0a8ff;
+    --c-faint: #a373c9;
+    --c-line: #5b3080;
+    --c-brand: #ff3ec8;
+    --c-brand-strong: #ffa8ec;
+    --c-on-brand: #200015;
+    --neon: 255, 70, 210;
+    --panel: #120726;
+    --panel-strong: rgba(90, 20, 110, 0.85);
   }
 
 
@@ -153,15 +153,15 @@
 
 
   /* スマホの FOUC・合成誤差対策: 暗背景テーマは背景色を確実に固定する */
-  body[data-theme='aurora'] { background-color: #020309 !important; }
+  body[data-theme='bubble'] { background-color: #021b24 !important; }
   body[data-theme='sakura'] { background-color: #0d0416 !important; }
-  body[data-theme='inferno'] { background-color: #0a0100 !important; }
-  body[data-theme='tenkuu'] { background-color: #041022 !important; }
+  body[data-theme='snow'] { background-color: #071322 !important; }
+  body[data-theme='kaleido'] { background-color: #05010c !important; }
 
-  /* 極光：やわらかな緑白の発光（オーロラ） */
-  body[data-theme='aurora'] {
+  /* バブル：やわらかな水色の発光 */
+  body[data-theme='bubble'] {
     font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
-    text-shadow: 0 0 5px rgba(120, 255, 170, 0.4), 0 0 12px rgba(150, 120, 255, 0.25);
+    text-shadow: 0 0 5px rgba(80, 220, 255, 0.4), 0 0 12px rgba(120, 240, 255, 0.22);
     letter-spacing: 0.03em;
   }
   /* 桜吹雪：ほんのり桜色の発光 */
@@ -170,16 +170,16 @@
     text-shadow: 0 0 5px rgba(255, 140, 185, 0.35), 0 0 12px rgba(255, 140, 185, 0.18);
     letter-spacing: 0.03em;
   }
-  /* インフェルノ：炎のゆらめく発光 */
-  body[data-theme='inferno'] {
+  /* スノーワールド：雪あかりの澄んだ発光 */
+  body[data-theme='snow'] {
     font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
-    text-shadow: 0 0 5px rgba(255, 100, 30, 0.45), 0 0 14px rgba(255, 60, 0, 0.22);
+    text-shadow: 0 0 5px rgba(150, 210, 255, 0.45), 0 0 14px rgba(220, 240, 255, 0.25);
     letter-spacing: 0.03em;
   }
-  /* 天空神：神々しい金色の光 */
-  body[data-theme='tenkuu'] {
+  /* 万華鏡：虹色にゆらめく発光 */
+  body[data-theme='kaleido'] {
     font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
-    text-shadow: 0 0 5px rgba(255, 215, 120, 0.45), 0 0 12px rgba(160, 200, 255, 0.22);
+    text-shadow: 0 0 5px rgba(255, 70, 210, 0.45), 0 0 12px rgba(160, 120, 255, 0.25);
     letter-spacing: 0.03em;
   }
 }
@@ -293,15 +293,15 @@ body[data-theme='dark'] .calc-cell {
    背景は「純黒 ＋ 緑のデジタルレイン」だけにして、余計な縞を一切重ねない。 */
 
 /* =====================================================================
- * 特別解放テーマ（極光 / 桜吹雪 / インフェルノ / 天空神）の共通オーバーライド。
- * 3テーマとも「暗背景 × ネオン」系なので、ハードコードされた明るい固定色を
+ * 特別解放テーマ（バブル / 桜吹雪 / スノーワールド / 万華鏡）の共通オーバーライド。
+ * 4テーマとも「暗背景 × ネオン」系なので、ハードコードされた明るい固定色を
  * テーマ別トークン（--neon / --panel / --panel-strong / --c-content）で
  * まとめて変換する。:is() で3テーマを1つのセレクタにまとめている。
  * （@layer 外＝Tailwind ユーティリティに勝つ。!important で確実に上書き）
  * ===================================================================== */
 
 /* 明るい淡色背景（-50/-100/-200・白・スレート）→ 暗いパネル */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .bg-white,
   .bg-blue-50, .bg-blue-100, .bg-sky-50, .bg-indigo-50,
   .bg-emerald-50, .bg-emerald-100, .bg-green-50, .bg-green-100,
@@ -314,7 +314,7 @@ body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [d
 }
 
 /* 濃い原色背景（ボタン・バナー）→ ネオン枠＋発光のパネル */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-indigo-500, .bg-indigo-600,
   .bg-emerald-500, .bg-emerald-600, .bg-green-500, .bg-green-600,
   .bg-violet-500, .bg-violet-600, .bg-amber-500, .bg-amber-600,
@@ -326,7 +326,7 @@ body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [d
 }
 
 /* グラデーション背景 → ネオンのグラデに差し替え */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-b, .bg-gradient-to-bl) {
   background-image: linear-gradient(135deg, var(--panel-strong), rgba(var(--neon), 0.06)) !important;
   border: 1px solid rgba(var(--neon), 0.55);
@@ -334,12 +334,12 @@ body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [d
 }
 
 /* 半透明の白タイル（bg-white/20 等）→ ネオンタイル */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) [class*="bg-white/"] {
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) [class*="bg-white/"] {
   background-color: rgba(var(--neon), 0.14) !important;
 }
 
 /* 原色テキスト → テーマのコンテンツ色 */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800,
   .text-sky-600, .text-indigo-600, .text-emerald-600, .text-emerald-700,
   .text-green-600, .text-green-700, .text-teal-600, .text-cyan-600,
@@ -352,7 +352,7 @@ body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [d
 }
 
 /* 原色ボーダー → ネオン */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .border-blue-100, .border-blue-200, .border-blue-300,
   .border-amber-100, .border-amber-200, .border-amber-300,
   .border-emerald-200, .border-emerald-300, .border-violet-200, .border-rose-200,
@@ -361,18 +361,18 @@ body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [d
 }
 
 /* リング色 → ネオン */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   .ring-blue-200, .ring-amber-200, .ring-emerald-200, .ring-violet-200, .ring-rose-200) {
   --tw-ring-color: rgba(var(--neon), 0.4) !important;
 }
 
 /* 枠線つきカードに薄いネオングロー */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) :is(.border-line, .border) {
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(.border-line, .border) {
   box-shadow: 0 0 14px rgba(var(--neon), 0.1), inset 0 0 16px rgba(var(--neon), 0.04);
 }
 
 /* 筆算セルは数字の視認性優先で等幅フォント＋内側グロー */
-body:is([data-theme='aurora'], [data-theme='sakura'], [data-theme='inferno'], [data-theme='tenkuu']) .calc-cell {
+body:is([data-theme='bubble'], [data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) .calc-cell {
   font-family: "Share Tech Mono", "JetBrains Mono", monospace;
   box-shadow: inset 0 0 8px rgba(var(--neon), 0.14);
 }
