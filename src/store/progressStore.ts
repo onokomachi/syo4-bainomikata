@@ -8,11 +8,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { getProgressStorage } from '../services/progressRepository';
 
 export type ModuleId =
-  | 'hissan'
-  | 'mental'
-  | 'rules'
-  | 'estimate'
-  | 'check'
+  | 'kihon'
+  | 'times'
+  | 'compare'
+  | 'base'
+  | 'ratio-compare'
   | 'word-problem'
   | 'error-hunter'
   | 'mock-test';
@@ -22,7 +22,7 @@ export interface TestStepResult {
   daimon: number;
   sub?: string;
   title: string;
-  section: '表' | '裏' | '参考';
+  section: '表' | '参考';
   q: string; // 問題
   a: string; // 正しい答え
   points: number;
@@ -31,7 +31,7 @@ export interface TestStepResult {
 }
 
 export interface TestDetail {
-  mode: '表' | '裏' | 'ぜんぶ';
+  mode: '表' | '参考' | 'ぜんぶ';
   omoteScore: number;
   omoteMax: number;
   uraScore: number;
@@ -60,11 +60,11 @@ export interface SkillMastery {
 /** skillId のプレフィックスから所属モジュールを判定 */
 export function skillToModuleId(skillId: string): ModuleId | null {
   if (skillId === 'mock-test' || skillId.startsWith('mock-')) return 'mock-test';
-  if (skillId.startsWith('hissan-')) return 'hissan';
-  if (skillId.startsWith('mental-')) return 'mental';
-  if (skillId.startsWith('rules-')) return 'rules';
-  if (skillId.startsWith('est-')) return 'estimate';
-  if (skillId.startsWith('check-')) return 'check';
+  if (skillId.startsWith('kihon-')) return 'kihon';
+  if (skillId.startsWith('times-')) return 'times';
+  if (skillId.startsWith('compare-')) return 'compare';
+  if (skillId.startsWith('base-')) return 'base';
+  if (skillId.startsWith('ratio-')) return 'ratio-compare';
   if (skillId.startsWith('wp-') || skillId.startsWith('word-')) return 'word-problem';
   if (skillId.startsWith('eh-') || skillId.startsWith('fix-') || skillId.startsWith('judge-')) return 'error-hunter';
   return null;
@@ -209,7 +209,7 @@ export const useProgressStore = create<ProgressState>()(
       }),
     }),
     {
-      name: 'hissan_progress_v4',
+      name: 'bai_progress_v1',
       version: 2,
       storage: createJSONStorage(() => getProgressStorage()),
       // v1→v2: 満点回数カウンタを新設。旧データには存在しないため 0 で補う

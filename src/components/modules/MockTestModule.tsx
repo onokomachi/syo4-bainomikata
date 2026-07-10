@@ -1,54 +1,30 @@
 /**
- * 本番テストモード。わり算単元の単元テストを同じ大問順・同じ問題数で通しで解く。
- * 開始前に 表だけ / 裏だけ / 表＋裏（ぜんぶ）の範囲を選べる。
+ * 本番テストモード。「倍の見方」単元テストを 同じ大問順・同じ問題数で 通しで解く。
+ * 開始前に 表だけ / 表＋いかそう算数（ぜんぶ）の 範囲を選べる。
  * 既存の各アクティビティを「1問だけ出す」形で再利用し、ノーミス完答（一発正解）を採点する。
- * 表=知識技能100点 / 裏=思考判断表現50点。結果は学習のきろくに詳細つきで残す。
+ * 表＝知識技能100点。結果は学習のきろくに詳細つきで残す。
  */
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft, ClipboardCheck, Home, RotateCcw, Trophy } from 'lucide-react';
-import { TEST_STEPS, TestProblem, TestStep, describeProblem, OMOTE_MAX, URA_MAX, TOTAL_MAX } from '../../lib/testConfig';
+import { TEST_STEPS, TestProblem, TestStep, describeProblem, OMOTE_MAX, TOTAL_MAX } from '../../lib/testConfig';
 import { useProgressStore, TestDetail } from '../../store/progressStore';
-import { MentalRound } from './MentalModule';
-import { RulesRound } from './RulesModule';
-import { EstimateRound } from './EstimateModule';
-import { CheckRound } from './CheckModule';
+import { KihonRound } from './KihonModule';
+import { TimesRound } from './TimesModule';
+import { CompareRound } from './CompareModule';
+import { BaseRound } from './BaseModule';
+import { RatioCompareRound } from './RatioCompareModule';
 import { WordRound } from './WordProblemModule';
-import { DivErrorRound } from './ErrorHunterModule';
-import { DivisionSimulator } from '../DivisionSimulator';
-import { Problem } from '../../types';
+import { BaiErrorRound } from './ErrorHunterModule';
 
 interface Props { onExit: () => void; }
 
 type Phase = 'INTRO' | 'RUN' | 'RESULT';
-type Mode = '表' | '裏' | 'ぜんぶ';
+type Mode = '表' | 'ぜんぶ';
 
 const stepsForMode = (mode: Mode): TestStep[] => {
   if (mode === '表') return TEST_STEPS.filter((s) => s.section === '表');
-  if (mode === '裏') return TEST_STEPS.filter((s) => s.section === '裏' || s.section === '参考');
   return TEST_STEPS;
-};
-
-/** テスト用の筆算アクティビティ（マスターモードで解き、一発正解を採点） */
-const TestHissan: React.FC<{ problem: Problem; onNext: () => void; onResult: (p: boolean) => void }> = ({ problem, onNext, onResult }) => {
-  const recordResult = useProgressStore((s) => s.recordResult);
-  const [reported, setReported] = useState(false);
-  return (
-    <DivisionSimulator
-      problem={problem}
-      isMasterMode
-      onBack={onNext}
-      onNext={onNext}
-      onFinish={(res) => {
-        // 一発目の採点だけを得点にする（やり直しは学び用で、点には入れない）
-        if (!reported) {
-          setReported(true);
-          onResult(res.isPerfect);
-          recordResult({ moduleId: 'hissan', skillId: 'mock-hissan', label: `${res.dividend} ÷ ${res.divisor}`, correct: res.isPerfect });
-        }
-      }}
-    />
-  );
 };
 
 export const MockTestModule: React.FC<Props> = ({ onExit }) => {
@@ -93,11 +69,10 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
   // 採点（選んだ範囲の最大点）
   const earnedAt = (i: number) => (results[i] ? activeSteps[i].points : 0);
   const omoteMax = activeSteps.filter((s) => s.section === '表').reduce((a, s) => a + s.points, 0);
-  const uraMax = activeSteps.filter((s) => s.section === '裏').reduce((a, s) => a + s.points, 0);
-  const totalMax = omoteMax + uraMax;
+  const sankouMax = activeSteps.filter((s) => s.section === '参考').reduce((a, s) => a + s.points, 0);
+  const totalMax = omoteMax + sankouMax;
   const omoteScore = activeSteps.reduce((a, s, i) => a + (s.section === '表' ? earnedAt(i) : 0), 0);
-  const uraScore = activeSteps.reduce((a, s, i) => a + (s.section === '裏' ? earnedAt(i) : 0), 0);
-  const totalScore = omoteScore + uraScore;
+  const totalScore = omoteScore;
   const refIndex = activeSteps.findIndex((s) => s.section === '参考');
   const refPerfect = refIndex >= 0 && results[refIndex];
 
@@ -105,7 +80,7 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
   if (phase === 'RESULT' && !recorded) {
     const detail: TestDetail = {
       mode,
-      omoteScore, omoteMax, uraScore, uraMax,
+      omoteScore, omoteMax, uraScore: 0, uraMax: 0,
       total: totalScore, totalMax,
       steps: activeSteps.map((s, i) => {
         const d = describeProblem(problems[i]);
@@ -134,12 +109,11 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
           <div className="bg-surface rounded-[36px] shadow-2xl border border-line p-8 md:p-12 text-center mt-4">
             <div className="w-24 h-24 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6"><ClipboardCheck size={44} /></div>
             <h1 className="text-3xl font-black text-content mb-2">本番テストモード</h1>
-            <p className="text-muted font-bold leading-relaxed mb-2">「わり算の筆算(2)」の テストに ちょうせん！</p>
+            <p className="text-muted font-bold leading-relaxed mb-2">「倍の見方」の テストに ちょうせん！</p>
             <p className="text-faint font-bold text-sm mb-6">どこに ちょうせんする？ 範囲を えらんでね。まちがえても 正しい こたえまで すすめるよ。一発で 正解できると 点が もらえるよ。</p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 justify-center">
               <RangeButton m="表" title="表だけ" sub="知識・ぎのう" max={OMOTE_MAX} color="border-blue-300 hover:border-blue-400 bg-blue-50/40" />
-              <RangeButton m="裏" title="裏だけ" sub="考える力（参考つき）" max={URA_MAX} color="border-rose-300 hover:border-rose-400 bg-rose-50/40" />
-              <RangeButton m="ぜんぶ" title="表＋裏" sub="ぜんぶ通し（参考つき）" max={TOTAL_MAX} color="border-amber-300 hover:border-amber-400 bg-amber-50/40" />
+              <RangeButton m="ぜんぶ" title="表＋いかそう算数" sub="ぜんぶ通し（参考つき）" max={TOTAL_MAX} color="border-amber-300 hover:border-amber-400 bg-amber-50/40" />
             </div>
           </div>
         </div>
@@ -150,7 +124,6 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
   /* ---------------- RESULT ---------------- */
   if (phase === 'RESULT') {
     const omoteSteps = activeSteps.map((s, i) => ({ s, i })).filter((x) => x.s.section === '表');
-    const uraSteps = activeSteps.map((s, i) => ({ s, i })).filter((x) => x.s.section === '裏');
     const Row: React.FC<{ s: TestStep; i: number }> = ({ s, i }) => {
       const d = describeProblem(problems[i]);
       return (
@@ -175,7 +148,6 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
               <div className="text-5xl font-black text-blue-600 tabular-nums mt-2">{totalScore}<span className="text-2xl text-muted"> / {totalMax}点</span></div>
               <div className="flex justify-center gap-3 mt-3">
                 {omoteMax > 0 && <span className="px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-black text-sm">表 {omoteScore}/{omoteMax}</span>}
-                {uraMax > 0 && <span className="px-4 py-1.5 rounded-full bg-rose-50 text-rose-600 font-black text-sm">裏 {uraScore}/{uraMax}</span>}
               </div>
             </div>
 
@@ -185,17 +157,11 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
                 {omoteSteps.map(({ s, i }) => <Row key={i} s={s} i={i} />)}
               </div>
             )}
-            {uraSteps.length > 0 && (
-              <div className="rounded-2xl border border-line p-4 mb-3">
-                <p className="text-xs font-black text-rose-500 mb-2">裏・思考はんだん表現</p>
-                {uraSteps.map(({ s, i }) => <Row key={i} s={s} i={i} />)}
-              </div>
-            )}
             {refIndex >= 0 && (
               <div className="rounded-2xl border border-line p-4 mb-6">
                 <p className="text-xs font-black text-faint mb-1">いかそう算数（点数なし・評価）</p>
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-content text-sm">なぜ まちがえたかを 見ぬく</span>
+                  <span className="font-bold text-content text-sm">差ではなく 倍で くらべられたか</span>
                   <span className={`font-black ${refPerfect ? 'text-emerald-600' : 'text-amber-500'}`}>{refPerfect ? 'A（一発で見ぬけた！）' : 'がんばろう'}</span>
                 </div>
               </div>
@@ -228,17 +194,17 @@ export const MockTestModule: React.FC<Props> = ({ onExit }) => {
   const renderActivity = () => {
     const common = { onNext: advance, onResult, nextLabel: 'つぎの もんだいへ' };
     switch (tp.kind) {
-      case 'mental': return <MentalRound {...common} level={tp.level} problem={tp.p} />;
-      case 'rules': return <RulesRound {...common} level={tp.level} problem={tp.p} />;
-      case 'estimate': return <EstimateRound {...common} level={tp.level} problem={tp.p} />;
-      case 'check': return <CheckRound {...common} level={tp.level} problem={tp.p} />;
+      case 'kihon': return <KihonRound {...common} level={tp.level} problem={tp.p} />;
+      case 'times': return <TimesRound {...common} level={tp.level} problem={tp.p} />;
+      case 'compare': return <CompareRound {...common} level={tp.level} problem={tp.p} />;
+      case 'base': return <BaseRound {...common} level={tp.level} problem={tp.p} />;
+      case 'ratio': return <RatioCompareRound {...common} level={tp.level} problem={tp.p} />;
       case 'word': return <WordRound {...common} level={tp.level} problem={tp.p} />;
-      case 'error': return <DivErrorRound example={tp.p} startStage="judge" onNext={advance} onResult={onResult} nextLabel="つぎの もんだいへ" />;
-      case 'hissan': return <TestHissan problem={tp.p} onNext={advance} onResult={onResult} />;
+      case 'error': return <BaiErrorRound example={tp.p} startStage="judge" onNext={advance} onResult={onResult} nextLabel="つぎの もんだいへ" />;
     }
   };
 
-  const sectionColor = step.section === '表' ? 'bg-blue-100 text-blue-700' : step.section === '裏' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-700';
+  const sectionColor = step.section === '表' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700';
 
   return (
     <div className="w-full h-full flex flex-col bg-bg">

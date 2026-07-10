@@ -6,11 +6,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Hub } from './components/Hub';
-import { HissanModule } from './components/modules/HissanModule';
-import { MentalModule } from './components/modules/MentalModule';
-import { RulesModule } from './components/modules/RulesModule';
-import { EstimateModule } from './components/modules/EstimateModule';
-import { CheckModule } from './components/modules/CheckModule';
+import { KihonModule } from './components/modules/KihonModule';
+import { TimesModule } from './components/modules/TimesModule';
+import { CompareModule } from './components/modules/CompareModule';
+import { BaseModule } from './components/modules/BaseModule';
+import { RatioCompareModule } from './components/modules/RatioCompareModule';
 import { WordProblemModule } from './components/modules/WordProblemModule';
 import { ErrorHunterModule } from './components/modules/ErrorHunterModule';
 import { MockTestModule } from './components/modules/MockTestModule';
@@ -35,22 +35,22 @@ export default function App() {
 
   const renderModule = (id: ModuleId) => {
     switch (id) {
-      case 'hissan':
-        return <HissanModule onExit={goHub} />;
-      case 'mental':
-        return <MentalModule onExit={goHub} />;
-      case 'rules':
-        return <RulesModule onExit={goHub} />;
-      case 'estimate':
-        return <EstimateModule onExit={goHub} />;
-      case 'check':
-        return <CheckModule onExit={goHub} />;
+      case 'kihon':
+        return <KihonModule onExit={goHub} />;
+      case 'times':
+        return <TimesModule onExit={goHub} />;
+      case 'compare':
+        return <CompareModule onExit={goHub} />;
+      case 'base':
+        return <BaseModule onExit={goHub} />;
+      case 'ratio-compare':
+        return <RatioCompareModule onExit={goHub} />;
       case 'word-problem':
         return <WordProblemModule onExit={goHub} />;
       case 'error-hunter':
         return <ErrorHunterModule onExit={goHub} />;
       default:
-        return <HissanModule onExit={goHub} />;
+        return <KihonModule onExit={goHub} />;
     }
   };
 
