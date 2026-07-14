@@ -21,7 +21,7 @@ const THEMES: { id: Theme; label: string; icon: React.ReactNode; swatch: string 
   { id: 'bubble', label: 'バブル', icon: <Droplets size={22} />, swatch: 'bg-[#021b24] border-cyan-300' },
   { id: 'sakura', label: '桜吹雪', icon: <Flower2 size={22} />, swatch: 'bg-[#12051c] border-pink-400' },
   { id: 'snow', label: 'スノーワールド', icon: <Snowflake size={22} />, swatch: 'bg-[#071322] border-sky-300' },
-  { id: 'kaleido', label: '万華鏡', icon: <Sparkles size={22} />, swatch: 'bg-[#05010c] border-fuchsia-400' },
+  { id: 'kaleido', label: '時空神', icon: <Sparkles size={22} />, swatch: 'bg-[#05010c] border-fuchsia-400' },
 ];
 
 const FONTS: { id: FontScale; label: string; sample: string }[] = [
