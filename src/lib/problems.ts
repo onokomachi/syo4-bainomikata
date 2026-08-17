@@ -18,6 +18,77 @@
 function rnd(min: number, max: number) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function pick<T>(a: T[]): T { return a[Math.floor(Math.random() * a.length)]; }
 
+/* =====================================================================
+ * 式の選択肢
+ *
+ * 単元テストは式と答えを別々に採点する（式が正しければ計算の答えが誤っていても配点可）。
+ * 「どんな計算になるか」を答えの数値とは独立に問えるようにする。
+ * =================================================================== */
+
+export type ShikiKind =
+  | 'times'     // 何倍か        : くらべられる量 ÷ もとにする量
+  | 'compare'   // くらべられる量: もとにする量 × 倍
+  | 'base'      // もとにする量  : くらべられる量 ÷ 倍
+  | 'relation'; // 関係式        : □ × 倍 ＝ くらべられる量
+
+export interface ShikiChoices {
+  choices: string[];
+  correctIndex: number;
+  /** まちがえたときのヒント */
+  hint: string;
+}
+
+/**
+ * まちがいの選択肢が「計算すると正解と同じ数になってしまう」のを避ける。
+ * 例) もとにする量2・倍2 のとき くらべられる量は4 で、4−2 も 2 になり、
+ *     ひき算の誤答が正解の数と一致してしまう。
+ */
+export function buildShikiChoices(kind: ShikiKind, base: number, times: number, compare: number): ShikiChoices {
+  let correct: string;
+  let distractors: string[];
+  let hint: string;
+
+  switch (kind) {
+    case 'times':
+      correct = `${compare} ÷ ${base}`;
+      distractors = [
+        `${base} ÷ ${compare}`,
+        compare - base === times ? `${base} × ${times}` : `${compare} − ${base}`,
+      ];
+      hint = `「何倍か」を もとめるのは わり算だよ。もとにする量（${base}）で わろう。ひき算だと「ちがい」しか わからないよ。`;
+      break;
+    case 'compare':
+      correct = `${base} × ${times}`;
+      distractors = [
+        `${base} ÷ ${times}`,
+        // もとにする量2・倍2 のときだけ「もとにする量＋倍」が正解と同じ4になってしまう。
+        // その場合は「何倍かを もとめる式」を誤答にする（値も表記も正解と重ならない）。
+        base + times === compare ? `${compare} ÷ ${base}` : `${base} + ${times}`,
+      ];
+      hint = `「◯倍に あたる量」を もとめるのは かけ算だよ。もとにする量（${base}）に 倍（${times}）を かけよう。`;
+      break;
+    case 'base':
+      correct = `${compare} ÷ ${times}`;
+      distractors = [
+        `${compare} × ${times}`,
+        compare - times === base ? `${times} ÷ ${compare}` : `${compare} − ${times}`,
+      ];
+      hint = `もとにする量を □ とすると □ × ${times} ＝ ${compare}。□ を もとめるには わり算を するよ。`;
+      break;
+    case 'relation':
+      correct = `□ × ${times} ＝ ${compare}`;
+      distractors = [
+        `□ ÷ ${times} ＝ ${compare}`,
+        `${times} × ${compare} ＝ □`,
+      ];
+      hint = `もとにする量（□）を ${times}倍 すると くらべられる量（${compare}）に なる、という かんけいだよ。`;
+      break;
+  }
+
+  const options = [correct, ...distractors].sort(() => Math.random() - 0.5);
+  return { choices: options, correctIndex: options.indexOf(correct), hint };
+}
+
 /** 場面（テープ図・文章題で共通に使う「基準量／比較量」のペア設定） */
 interface Scene {
   baseName: string;
@@ -215,9 +286,25 @@ export interface RatioCompareProblem {
   beforeB: number; afterB: number; timesB: number;
   diffA: number; diffB: number;
   biggerLabel: 'A' | 'B';
+  /**
+   * 「変化が 小さいのは どちらか」を問うか。
+   * 単元テストの「いかそう算数」は "上がり方が小さいのはどちら" と小さい側を問う。
+   * 大きい側だけで練習すると、反射で大きい方を選んで誤答するため、向きをランダム化する。
+   */
+  askSmaller: boolean;
+  /** askSmaller を踏まえて実際に答えるべきラベル */
+  answerLabel: 'A' | 'B';
   showDiffTrap: boolean; // 差が同じ（または差だけ見ると逆に見える）ことに気づかせる
   hint: string;
   explain: string;
+}
+
+/** 「大きい方/小さい方」の問い方をランダムに決め、対応する正解ラベルを返す */
+function decideDirection(timesA: number, timesB: number): { askSmaller: boolean; biggerLabel: 'A' | 'B'; answerLabel: 'A' | 'B' } {
+  const biggerLabel: 'A' | 'B' = timesA > timesB ? 'A' : 'B';
+  const smallerLabel: 'A' | 'B' = biggerLabel === 'A' ? 'B' : 'A';
+  const askSmaller = Math.random() < 0.5;
+  return { askSmaller, biggerLabel, answerLabel: askSmaller ? smallerLabel : biggerLabel };
 }
 
 export function generateRatioCompare(level: RatioCompareLevel): RatioCompareProblem {
@@ -226,17 +313,17 @@ export function generateRatioCompare(level: RatioCompareLevel): RatioCompareProb
     const beforeA = rnd(10, 30);
     const timesA = rnd(2, 4);
     const afterA = beforeA * timesA;
-    let beforeB = rnd(10, 30);
+    const beforeB = rnd(10, 30);
     let timesB = rnd(2, 4);
     while (timesB === timesA) timesB = rnd(2, 4);
     const afterB = beforeB * timesB;
-    const biggerLabel: 'A' | 'B' = timesA > timesB ? 'A' : 'B';
+    const dir = decideDirection(timesA, timesB);
     return {
       pair, beforeA, afterA, timesA, beforeB, afterB, timesB,
       diffA: afterA - beforeA, diffB: afterB - beforeB,
-      biggerLabel, showDiffTrap: false,
+      ...dir, showDiffTrap: false,
       hint: `${pair.itemA}は ${beforeA}${pair.unit} → ${afterA}${pair.unit}、${pair.itemB}は ${beforeB}${pair.unit} → ${afterB}${pair.unit}。それぞれ「あと ÷ まえ」で 倍を もとめて くらべよう。`,
-      explain: `${pair.itemA}は ${afterA} ÷ ${beforeA} ＝ ${timesA}倍。${pair.itemB}は ${afterB} ÷ ${beforeB} ＝ ${timesB}倍。倍が 大きい ${biggerLabel === 'A' ? pair.itemA : pair.itemB} の方が よく変化しているね。`,
+      explain: `${pair.itemA}は ${afterA} ÷ ${beforeA} ＝ ${timesA}倍。${pair.itemB}は ${afterB} ÷ ${beforeB} ＝ ${timesB}倍。倍が ${dir.askSmaller ? '小さい' : '大きい'} ${dir.answerLabel === 'A' ? pair.itemA : pair.itemB} の方が、変化が ${dir.askSmaller ? '小さい' : '大きい'}と いえるね。`,
     };
   }
   // ratio-compare-diff: 差は同じ（または差だけでは分かりにくい）が、倍で比べると結論がちがう。
@@ -249,13 +336,13 @@ export function generateRatioCompare(level: RatioCompareLevel): RatioCompareProb
   const beforeA = diff; // timesA=2 なので diffA(=beforeA) が diff と一致する
   const afterA = beforeA * timesA;
   const afterB = beforeB + diff;
-  const biggerLabel: 'A' | 'B' = timesA >= timesB ? 'A' : 'B';
+  const dir = decideDirection(timesA, timesB);
   return {
     pair, beforeA, afterA, timesA, beforeB, afterB, timesB,
     diffA: afterA - beforeA, diffB: afterB - beforeB,
-    biggerLabel, showDiffTrap: true,
-    hint: `差（ふえた量）だけを 見ると 同じ ${diff}${pair.unit}に 見えるね。でも「もとの 何倍に なったか」で くらべると どうかな？ あと ÷ まえ を 計算しよう。`,
-    explain: `差は どちらも ${diff}${pair.unit}で 同じ。でも 倍で くらべると、${pair.itemA}は ${timesA}倍、${pair.itemB}は ${timesB}倍。差ではなく 倍（割合）で くらべると、${biggerLabel === 'A' ? pair.itemA : pair.itemB} の方が よく変化していると 言えるね。`,
+    ...dir, showDiffTrap: true,
+    hint: `差（ふえた量）は どちらも 同じ ${diff}${pair.unit}だったね。でも「もとの 何倍に なったか」で くらべると どうかな？ あと ÷ まえ を 計算しよう。`,
+    explain: `差は どちらも ${diff}${pair.unit}で 同じ。でも 倍で くらべると、${pair.itemA}は ${timesA}倍、${pair.itemB}は ${timesB}倍。差ではなく 倍（割合）で くらべると、変化が ${dir.askSmaller ? '小さい' : '大きい'}のは ${dir.answerLabel === 'A' ? pair.itemA : pair.itemB} だと いえるね。`,
   };
 }
 
@@ -300,6 +387,8 @@ export interface BaiWordProblem {
   beforeA?: number; afterA?: number; timesA?: number;
   beforeB?: number; afterB?: number; timesB?: number;
   biggerLabel?: 'A' | 'B';
+  askSmaller?: boolean;
+  answerLabel?: 'A' | 'B';
   why: string;
   finalWhy: string;
 }
@@ -322,9 +411,10 @@ export function generateWord(level: WordLevel): BaiWordProblem {
     const p = generateRatioCompare(pick(['ratio-compare-basic', 'ratio-compare-diff'] as const));
     return {
       kind: 'ratio',
-      text: `${p.pair.itemA}を ${p.beforeA}${p.pair.unit}から ${p.pair.verb}と ${p.afterA}${p.pair.unit}に、${p.pair.itemB}を ${p.beforeB}${p.pair.unit}から ${p.afterB}${p.pair.unit}に しました。よく のびた（かわった）のは どちらですか？`,
+      text: `${p.pair.itemA}を ${p.beforeA}${p.pair.unit}から ${p.pair.verb}と ${p.afterA}${p.pair.unit}に、${p.pair.itemB}を ${p.beforeB}${p.pair.unit}から ${p.afterB}${p.pair.unit}に しました。変化の しかたが ${p.askSmaller ? '小さい' : '大きい'}のは どちらですか？`,
       emoji: p.pair.emojiA,
       pair: p.pair,
+      askSmaller: p.askSmaller, answerLabel: p.answerLabel,
       beforeA: p.beforeA, afterA: p.afterA, timesA: p.timesA,
       beforeB: p.beforeB, afterB: p.afterB, timesB: p.timesB,
       biggerLabel: p.biggerLabel,

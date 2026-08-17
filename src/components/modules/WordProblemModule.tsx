@@ -153,13 +153,13 @@ export const WordRound: React.FC<{
   };
 
   const chooseJudge = (label: 'A' | 'B') => {
-    if (label === problem.biggerLabel) {
+    if (label === (problem.answerLabel ?? problem.biggerLabel)) {
       finish();
     } else {
       playSoftTry();
       setMistakes((m) => m + 1);
       setPickedJudge(label);
-      setHint(`倍の 大きさで くらべよう。${problem.pair?.itemA}は ${problem.timesA}倍、${problem.pair?.itemB}は ${problem.timesB}倍だよ。`);
+      setHint(`倍の 大きさで くらべよう。${problem.pair?.itemA}は ${problem.timesA}倍、${problem.pair?.itemB}は ${problem.timesB}倍。今回 きかれているのは 変化が ${problem.askSmaller ? '小さい' : '大きい'}方だよ。`);
     }
   };
 
@@ -222,7 +222,7 @@ export const WordRound: React.FC<{
 
         {isRatio && stage === 'judge' && (
           <div>
-            <p className="text-center text-content font-black text-xl mb-4">よく のびた（かわった）のは どちら？</p>
+            <p className="text-center text-content font-black text-xl mb-4">変化の しかたが {problem.askSmaller ? '小さい' : '大きい'}のは どちら？</p>
             <div className="flex justify-center gap-4">
               <button onClick={() => chooseJudge('A')} className={`flex items-center gap-2 px-8 py-5 rounded-2xl border-2 font-black text-xl active:scale-95 transition-all ${pickedJudge === 'A' ? 'bg-amber-50 border-amber-300 text-amber-500' : 'bg-surface border-line text-content hover:border-teal-400'}`}>
                 {problem.pair?.emojiA} {problem.pair?.itemA}
