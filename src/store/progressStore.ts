@@ -15,7 +15,8 @@ export type ModuleId =
   | 'ratio-compare'
   | 'word-problem'
   | 'error-hunter'
-  | 'mock-test';
+  | 'mock-test'
+  | 'boss-battle';
 
 /** 本番テストの各設問の結果（学習のきろくで詳細表示するため） */
 export interface TestStepResult {
@@ -67,6 +68,7 @@ export function skillToModuleId(skillId: string): ModuleId | null {
   if (skillId.startsWith('ratio-')) return 'ratio-compare';
   if (skillId.startsWith('wp-') || skillId.startsWith('word-')) return 'word-problem';
   if (skillId.startsWith('eh-') || skillId.startsWith('fix-') || skillId.startsWith('judge-')) return 'error-hunter';
+  if (skillId.startsWith('boss-')) return 'boss-battle';
   return null;
 }
 
@@ -87,6 +89,8 @@ interface ProgressState {
   testPerfectCounts: { omote: number; ura: number; total: number };
   // 習熟度MAX（あるスキルで5問連続ノーミス＝熟達バー満タン）を一度でも達成したモジュール。
   masteredModules: Partial<Record<ModuleId, boolean>>;
+  // 開発者用デバッグコマンドで「全バッジ獲得あつかい」にしたか（本番の獲得状況は変更しない）
+  debugAllBadges: boolean;
   recordResult: (rec: Omit<ResultRecord, 'id' | 'ts'>) => void;
   getMastery: (skillId: string) => number; // 0..1（試行なしは 0）
   getMasteryStreak: (skillId: string) => number; // 0..1（連続ノーミス/5。熟達バー表示用）
@@ -94,6 +98,7 @@ interface ProgressState {
   getTodayCount: () => number; // きょう 正解した数
   getTodaySkillCount: (skillId: string) => number; // きょう そのスキルを 正解した数
   setDailyGoal: (n: number) => void;
+  setDebugAllBadges: (v: boolean) => void;
   reset: () => void;
 }
 
@@ -112,6 +117,7 @@ export const useProgressStore = create<ProgressState>()(
       bestTestTotal: 0,
       testPerfectCounts: { omote: 0, ura: 0, total: 0 },
       masteredModules: {},
+      debugAllBadges: false,
 
       recordResult: (rec) => {
         set((state) => {
@@ -202,10 +208,12 @@ export const useProgressStore = create<ProgressState>()(
       },
 
       setDailyGoal: (n) => set({ dailyGoal: n }),
+      setDebugAllBadges: (v) => set({ debugAllBadges: v }),
 
       reset: () => set({
         logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
         bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, testPerfectCounts: { omote: 0, ura: 0, total: 0 }, masteredModules: {},
+        debugAllBadges: false,
       }),
     }),
     {

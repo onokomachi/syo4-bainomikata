@@ -16,6 +16,8 @@ export interface BadgeData {
   testPerfectCounts?: { omote: number; ura: number; total: number };
   // 習熟度MAX（5連続ノーミス）を達成したモジュール
   masteredModules?: Record<string, boolean>;
+  // 開発者用デバッグコマンドで「全バッジ獲得あつかい」にしたか
+  debugAllBadges?: boolean;
 }
 
 export interface Badge {
@@ -81,6 +83,8 @@ export function computeBadges(d: BadgeData): Badge[] {
     icon: 'Crown',
     earned: list.every((b) => b.earned),
   });
+  // 開発者用デバッグコマンド：出来映え確認のため、全バッジ獲得あつかいで返す
+  if (d.debugAllBadges) return list.map((b) => ({ ...b, earned: true }));
   return list;
 }
 
