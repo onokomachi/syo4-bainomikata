@@ -1,19 +1,24 @@
 /**
- * 何倍かにあたる量を もとめるモジュール。
- * 基準量（もとにする量）× 倍 ＝ 比較量（くらべられる量）。
+ * 何倍かにあたる量を もとめるモジュール（テスト大問2に対応）。
+ * もとにする量 × 倍 ＝ くらべられる量。
+ *
+ * 図 → 式 → 答え → 「1とみると」の段階に分けて解く。
  */
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
 import { AdaptiveBar } from '../shared/AdaptiveBar';
 import { AnswerEntry } from '../shared/AnswerEntry';
-import { TapeDiagram } from '../shared/TapeDiagram';
+import { DoubleNumberLine } from '../shared/DoubleNumberLine';
+import { DiagramFillStage } from '../shared/DiagramFillStage';
+import { ChoiceStage } from '../shared/ChoiceStage';
+import { RoundFocus } from '../shared/roundTypes';
 import { HintBox, ResultPanel, SetupScreen, LevelCard } from '../ui/primitives';
-import { COMPARE_LEVELS, CompareLevel, BaseCompareProblem, generateCompare } from '../../lib/problems';
+import { COMPARE_LEVELS, CompareLevel, BaseCompareProblem, generateCompare, buildShikiChoices } from '../../lib/problems';
 import { useProgressStore } from '../../store/progressStore';
 import { useAdaptive } from '../../lib/useAdaptive';
-import { playClear, playSoftTry } from '../../lib/sound';
+import { playClear, playCorrect, playSoftTry } from '../../lib/sound';
 
 interface Props { onExit: () => void; }
 
@@ -77,61 +82,125 @@ export const CompareModule: React.FC<Props> = ({ onExit }) => {
 export const CompareRound: React.FC<{
   level: CompareLevel;
   problem?: BaseCompareProblem;
+  focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
   nextLabel?: string;
-}> = ({ level, problem: given, onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
   const [problem] = useState<BaseCompareProblem>(() => given ?? generateCompare(level));
-  const [stage, setStage] = useState<'answer' | 'done'>('answer');
+  const stages = useMemo<RoundFocus[]>(
+    () => (focus === 'full' ? ['diagram', 'shiki', 'answer'] : [focus]),
+    [focus]
+  );
+  const [stageIdx, setStageIdx] = useState(0);
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
 
+  const { base, times, compare, scene } = problem;
+  const shiki = useMemo(() => buildShikiChoices('compare', base, times, compare), [base, times, compare]);
+  const isDone = stageIdx >= stages.length;
+  const stage = stages[stageIdx];
+
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); setHint(h); };
+
   const finish = () => {
     playClear();
     confetti({ particleCount: 110, spread: 65, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'compare', skillId: level, label: `${problem.base} × ${problem.times}`, correct: mistakes === 0 });
+    recordResult({ moduleId: 'compare', skillId: level, label: `${base} × ${times}`, correct: mistakes === 0 });
     onResult?.(mistakes === 0);
-    setStage('done');
+    setStageIdx(stages.length);
   };
 
-  const submit = (v: string) => {
-    if (Number(v) === problem.compare) {
-      finish();
-    } else {
-      playSoftTry();
-      setMistakes((m) => m + 1);
-      setHint(problem.hint);
-    }
+  const advance = () => {
+    setHint(null);
+    if (stageIdx + 1 >= stages.length) finish();
+    else { playCorrect(); setStageIdx(stageIdx + 1); }
+  };
+
+  const submitAnswer = (v: string) => {
+    const want = stage === 'asview' ? times : compare;
+    if (Number(v) === want) advance();
+    else miss(problem.hint);
   };
 
   return (
     <div className="h-full overflow-y-auto p-4 md:p-8">
       <div className="max-w-xl mx-auto space-y-5">
         <div className="bg-surface border border-line rounded-[28px] shadow-xl p-6 md:p-8">
-          <div className="flex items-start gap-3 mb-4">
-            <span className="text-4xl shrink-0">{problem.scene.emoji}</span>
+          <div className="flex items-start gap-3">
+            <span className="text-4xl shrink-0">{scene.emoji}</span>
             <p className="text-lg md:text-xl font-black text-content leading-relaxed flex-1">
-              {problem.scene.baseName}の{problem.scene.measure}は {problem.base}{problem.scene.unit}です。{problem.scene.compareName}の{problem.scene.measure}は、{problem.scene.baseName}の {problem.times}倍に なります。{problem.scene.compareName}の{problem.scene.measure}は 何{problem.scene.unit}ですか？
+              {scene.baseName}の{scene.measure}は {base}{scene.unit}です。{scene.compareName}の{scene.measure}は、{scene.baseName}の {times}倍に なります。
+              {stage === 'asview'
+                ? `${scene.baseName}の${scene.measure}を「1」と みると、${scene.compareName}の${scene.measure}は いくつに あたりますか？`
+                : `${scene.compareName}の${scene.measure}は 何${scene.unit}ですか？`}
             </p>
           </div>
-          <TapeDiagram
-            baseLabel={problem.scene.baseName}
-            compareLabel={problem.scene.compareName}
-            baseUnits={1}
-            compareUnits={problem.times}
-            baseValue={`${problem.base}${problem.scene.unit}`}
-            compareValue="□"
-          />
         </div>
 
-        {hint && <HintBox tone="wrong">{hint}</HintBox>}
+        {stage === 'diagram' ? (
+          <DiagramFillStage
+            baseLabel={scene.baseName}
+            compareLabel={scene.compareName}
+            times={times}
+            given={{ compareValue: '□', baseTick: '1' }}
+            blanks={[
+              {
+                key: 'baseValue', value: base, display: `${base}${scene.unit}`,
+                prompt: `${scene.baseName}の${scene.measure}を 図の □ に 書こう`,
+                hint: `${scene.baseName}の${scene.measure}は もんだい文に 書いてあるよ。`,
+              },
+              {
+                key: 'timesTick', value: times, display: String(times),
+                prompt: `${scene.compareName}は ${scene.baseName}の 何倍ですか？ 下の 目もりの □ に 書こう`,
+                hint: `もんだい文の「${times}倍に なります」を 目もりに 書きうつそう。`,
+              },
+            ]}
+            onComplete={advance}
+            onMistake={() => setMistakes((m) => m + 1)}
+            accentText="text-emerald-600"
+          />
+        ) : (
+          <>
+            <div className="bg-surface border border-line rounded-[28px] shadow-lg p-5 md:p-6">
+              <DoubleNumberLine
+                baseLabel={scene.baseName}
+                compareLabel={scene.compareName}
+                times={times}
+                compareValue={isDone && stage !== 'asview' ? `${compare}${scene.unit}` : '□'}
+                baseValue={`${base}${scene.unit}`}
+                baseTick="1"
+                timesTick={String(times)}
+              />
+            </div>
 
-        {stage === 'answer' && (
-          <AnswerEntry onSubmit={submit} allowDecimal={false} accentText="text-emerald-600" />
+            {hint && <HintBox tone="wrong">{hint}</HintBox>}
+
+            {stage === 'shiki' && (
+              <ChoiceStage
+                prompt="どんな しきに なりますか？"
+                choices={shiki.choices}
+                correctIndex={shiki.correctIndex}
+                hint={shiki.hint}
+                onCorrect={advance}
+                onMistake={() => setMistakes((m) => m + 1)}
+                accentBorder="hover:border-emerald-400"
+              />
+            )}
+
+            {(stage === 'answer' || stage === 'asview') && (
+              <div>
+                <p className="text-center text-muted font-black mb-3">
+                  {stage === 'asview' ? 'いくつに あたりますか？' : `しき ${base} × ${times} の 答えは？`}
+                </p>
+                <AnswerEntry onSubmit={submitAnswer} allowDecimal={false} accentText="text-emerald-600" />
+              </div>
+            )}
+          </>
         )}
 
-        {stage === 'done' && (
+        {isDone && (
           <ResultPanel
             perfect={mistakes === 0}
             detail={<span>{problem.explain}</span>}

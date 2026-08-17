@@ -1,25 +1,31 @@
 /**
  * 「本番テストモード」の設定表。
- * 実際の単元テスト「倍の見方」（表＝知識・技能100点／いかそう算数＝参考）
- * と同じ大問構成・同じ問題形式で再現する（数値はランダム生成）。
- * 各設問は既存ジェネレータを呼び、既存アクティビティで解く。
- * 採点: ノーミス完答=満点、ミスありで完答=0点（＝一発正解を採点）。
  *
- * 大問1: 何倍かを もとめる（子どものイルカ・親のイルカ 型）
- * 大問2: 何倍かにあたる量を もとめる（学校・ビル 型）
- * 大問3: もとにする量を もとめる（りんご・メロン 型）
- * 大問4: 割合で くらべる（ゴムA・B 型）
- * 参考（いかそう算数）: 差ではなく 倍で くらべる（サンマ・イワシ 型）
+ * 実際の単元テスト「倍の見方」（表＝知識・技能100点／いかそう算数＝参考）を、
+ * 大問の順序だけでなく「どの技能に何点ふられているか」まで一致させる。
+ *
+ * 現物のテストは丸数字❶〜⓴の20か所×5点＝100点で、その内訳は次のとおり：
+ *   図（テープ図・数直線の□うめ）6か所 30点
+ *   式                              6か所 30点
+ *   答え                            5か所 25点
+ *   「1とみると いくつにあたるか」  2か所 10点
+ *   割合による判断                  1か所  5点
+ * さらに「式の採点基準：計算の答えが誤っていても5点を配点してよい」と明記されており、
+ * 式と答えは独立に採点される。よってここでも技能ごとに別々の設問として出す。
+ *
+ * 1つの大問の中の小問は同じ場面（同じ数値）を共有するので、
+ * 問題は大問ごとに1回だけ生成し、小問はその problem を focus ちがいで解く。
  */
 import {
-  KihonLevel, BaiTapeProblem, generateKihon,
   TimesLevel, BaseTimesProblem, generateTimes,
   CompareLevel, BaseCompareProblem, generateCompare,
   BaseLevel, BaseBaseProblem, generateBase,
   RatioCompareLevel, RatioCompareProblem, generateRatioCompare,
-  WordLevel, BaiWordProblem, generateWord,
-  EhPreset, BaiErrorExample, makeBaiError,
+  WordLevel, BaiWordProblem,
+  EhPreset, BaiErrorExample,
+  KihonLevel, BaiTapeProblem,
 } from './problems';
+import { RoundFocus } from '../components/shared/roundTypes';
 
 export type TestProblem =
   | { kind: 'kihon'; level: KihonLevel; p: BaiTapeProblem }
@@ -32,13 +38,20 @@ export type TestProblem =
 
 export type Section = '表' | '参考';
 
-export interface TestStep {
+/** 大問の中の1つの小問（＝採点の1単位） */
+export interface TestPart {
+  sub?: string;      // ①②③④
+  title: string;     // 採点画面・ヘッダ用
+  points: number;
+  focus: RoundFocus; // どの技能を問うか
+}
+
+/** 大問（同じ場面を小問で共有する） */
+export interface TestDaimon {
   daimon: number;
-  sub?: string;        // ①②③④⑤
-  title: string;       // 大問の説明（採点画面・ヘッダ用）
   section: Section;
-  points: number;      // 配点（参考は 0）
   gen: () => TestProblem;
+  parts: TestPart[];
 }
 
 const times = (level: TimesLevel): TestProblem => ({ kind: 'times', level, p: generateTimes(level) });
@@ -46,73 +59,115 @@ const compare = (level: CompareLevel): TestProblem => ({ kind: 'compare', level,
 const base = (level: BaseLevel): TestProblem => ({ kind: 'base', level, p: generateBase(level) });
 const ratio = (level: RatioCompareLevel): TestProblem => ({ kind: 'ratio', level, p: generateRatioCompare(level) });
 
-export const TEST_STEPS: TestStep[] = [
-  /* ===== 表・知識技能（計100点） ===== */
-  // 大問1: 何倍かを もとめる（イルカ型：くらべられる量 ÷ もとにする量）
-  { daimon: 1, sub: '①', title: '何倍かを もとめる', section: '表', points: 5, gen: () => times('times-big') },
-  { daimon: 1, sub: '②', title: '何倍かを もとめる', section: '表', points: 5, gen: () => times('times-big') },
-  { daimon: 1, sub: '③', title: '何倍かを もとめる', section: '表', points: 5, gen: () => times('times-big') },
-  { daimon: 1, sub: '④', title: '何倍かを もとめる', section: '表', points: 5, gen: () => times('times-big') },
-  { daimon: 1, sub: '⑤', title: '何倍かを もとめる', section: '表', points: 5, gen: () => times('times-basic') },
-
-  // 大問2: 何倍かにあたる量を もとめる（学校・ビル型：もとにする量 × 倍）
-  { daimon: 2, sub: '①', title: '何倍かにあたる量を もとめる', section: '表', points: 5, gen: () => compare('compare-big') },
-  { daimon: 2, sub: '②', title: '何倍かにあたる量を もとめる', section: '表', points: 5, gen: () => compare('compare-big') },
-  { daimon: 2, sub: '③', title: '何倍かにあたる量を もとめる', section: '表', points: 5, gen: () => compare('compare-big') },
-  { daimon: 2, sub: '④', title: '何倍かにあたる量を もとめる', section: '表', points: 5, gen: () => compare('compare-big') },
-  { daimon: 2, sub: '⑤', title: '何倍かにあたる量を もとめる', section: '表', points: 5, gen: () => compare('compare-basic') },
-
-  // 大問3: もとにする量を もとめる（りんご・メロン型：くらべられる量 ÷ 倍）
-  { daimon: 3, sub: '①', title: 'もとにする量を もとめる', section: '表', points: 5, gen: () => base('base-big') },
-  { daimon: 3, sub: '②', title: 'もとにする量を もとめる', section: '表', points: 5, gen: () => base('base-big') },
-  { daimon: 3, sub: '③', title: 'もとにする量を もとめる', section: '表', points: 5, gen: () => base('base-big') },
-  { daimon: 3, sub: '④', title: 'もとにする量を もとめる', section: '表', points: 5, gen: () => base('base-big') },
-  { daimon: 3, sub: '⑤', title: 'もとにする量を もとめる', section: '表', points: 5, gen: () => base('base-basic') },
-
-  // 大問4: 割合で くらべる（ゴムA・B型：2つの倍を もとめて くらべる）
-  { daimon: 4, sub: '①', title: '割合で くらべる（Aの倍）', section: '表', points: 5, gen: () => ratio('ratio-compare-basic') },
-  { daimon: 4, sub: '②', title: '割合で くらべる（Bの倍）', section: '表', points: 5, gen: () => ratio('ratio-compare-basic') },
-  { daimon: 4, sub: '③', title: '割合で くらべる（どちらが大きいか）', section: '表', points: 5, gen: () => ratio('ratio-compare-basic') },
-  { daimon: 4, sub: '④', title: '割合で くらべる（差は同じでも倍で見ると）', section: '表', points: 5, gen: () => ratio('ratio-compare-diff') },
-  { daimon: 4, sub: '⑤', title: '割合で くらべる（差は同じでも倍で見ると）', section: '表', points: 5, gen: () => ratio('ratio-compare-diff') },
-
-  /* ===== いかそう算数（参考・点数なし） ===== */
-  // サンマ・イワシ型：差ではなく 倍で くらべる 気づき
-  { daimon: 5, title: 'いかそう算数（差ではなく 倍で くらべる）', section: '参考', points: 0, gen: () => ratio('ratio-compare-diff') },
+export const TEST_DAIMONS: TestDaimon[] = [
+  /* 大問1（イルカ型）: 何倍かを もとめる。図2＋式1＋答1＋1とみる1 ＝ 25点 */
+  {
+    daimon: 1, section: '表', gen: () => times('times-big'),
+    parts: [
+      { sub: '①', title: '図の□に あてはまる数を書く', points: 10, focus: 'diagram' },
+      { sub: '②', title: '何倍かを もとめる式', points: 5, focus: 'shiki' },
+      { sub: '②', title: '何倍かを もとめる（答え）', points: 5, focus: 'answer' },
+      { sub: '③', title: '1とみると いくつに あたるか', points: 5, focus: 'asview' },
+    ],
+  },
+  /* 大問2（学校・ビル型）: 何倍かにあたる量。図2＋式1＋答1＋1とみる1 ＝ 25点 */
+  {
+    daimon: 2, section: '表', gen: () => compare('compare-big'),
+    parts: [
+      { sub: '①', title: '図の□に あてはまる数を書く', points: 10, focus: 'diagram' },
+      { sub: '②', title: '何倍かにあたる量を もとめる式', points: 5, focus: 'shiki' },
+      { sub: '②', title: '何倍かにあたる量（答え）', points: 5, focus: 'answer' },
+      { sub: '③', title: '1とみると いくつに あたるか', points: 5, focus: 'asview' },
+    ],
+  },
+  /* 大問3（りんご・メロン型）: もとにする量。図2＋関係式1＋式1＋答1 ＝ 25点 */
+  {
+    daimon: 3, section: '表', gen: () => base('base-big'),
+    parts: [
+      { sub: '①', title: '図の□に あてはまる数を書く', points: 10, focus: 'diagram' },
+      { sub: '②', title: '□を使った かけ算の式に表す', points: 5, focus: 'relation' },
+      { sub: '③', title: '□を もとめる式', points: 5, focus: 'shiki' },
+      { sub: '③', title: 'もとにする量（答え）', points: 5, focus: 'answer' },
+    ],
+  },
+  /* 大問4（ゴムA・B型）: 割合でくらべる。式2＋答2＋判断1 ＝ 25点 */
+  {
+    daimon: 4, section: '表', gen: () => ratio('ratio-compare-basic'),
+    parts: [
+      { sub: '①', title: 'A・Bの 倍を もとめる式', points: 10, focus: 'shiki' },
+      { sub: '①', title: 'A・Bの 倍（答え）', points: 10, focus: 'answer' },
+      { sub: '②', title: '割合で くらべて 判断する', points: 5, focus: 'judge' },
+    ],
+  },
+  /* いかそう算数（参考・配点なし）: 差を自分で求めてから 倍でくらべる */
+  {
+    daimon: 5, section: '参考', gen: () => ratio('ratio-compare-diff'),
+    parts: [
+      { title: 'いかそう算数（差ではなく 倍で くらべる）', points: 0, focus: 'full' },
+    ],
+  },
 ];
 
 /**
- * テスト結果のきろく用に、各問題を「問題文」と「正しい答え」の文字列にする。
+ * テスト結果のきろく用に、各設問を「問題文」と「正しい答え」の文字列にする。
  * 児童の入力値そのものは保存せず、問題・正答・○×だけを残す。
  */
-export function describeProblem(tp: TestProblem): { q: string; a: string } {
+export function describeProblem(tp: TestProblem, focus: RoundFocus): { q: string; a: string } {
   switch (tp.kind) {
-    case 'kihon': {
-      const p = tp.p;
-      const ans = p.missing === 'compare' ? p.compare : p.missing === 'times' ? p.times : p.base;
-      return { q: `${p.scene.baseName} と ${p.scene.compareName}（${p.missing} を もとめる）`, a: String(ans) };
+    case 'times': {
+      const { base: b, times: t, compare: c, scene } = tp.p;
+      if (focus === 'diagram') return { q: `図の□（${scene.compareName}の${scene.measure}と、もとにする量の目もり）`, a: `${c}${scene.unit} と 1` };
+      if (focus === 'shiki') return { q: `${scene.compareName}は ${scene.baseName}の 何倍かを もとめる式`, a: `${c} ÷ ${b}` };
+      if (focus === 'asview') return { q: `${b}${scene.unit}を1とみると ${c}${scene.unit}は いくつに あたるか`, a: `${t}` };
+      return { q: `${c} ÷ ${b}`, a: `${t}倍` };
     }
-    case 'times':
-      return { q: `${tp.p.compare} ÷ ${tp.p.base}（何倍？）`, a: `${tp.p.times}倍` };
-    case 'compare':
-      return { q: `${tp.p.base} × ${tp.p.times}（何倍かにあたる量）`, a: `${tp.p.compare}${tp.p.scene.unit}` };
-    case 'base':
-      return { q: `${tp.p.compare} ÷ ${tp.p.times}（もとにする量）`, a: `${tp.p.base}${tp.p.scene.unit}` };
-    case 'ratio':
-      return {
-        q: `${tp.p.pair.itemA}(${tp.p.beforeA}→${tp.p.afterA}) と ${tp.p.pair.itemB}(${tp.p.beforeB}→${tp.p.afterB}) はどちらが よく変化した？`,
-        a: `${tp.p.pair.itemA}=${tp.p.timesA}倍・${tp.p.pair.itemB}=${tp.p.timesB}倍 → ${tp.p.biggerLabel === 'A' ? tp.p.pair.itemA : tp.p.pair.itemB}`,
-      };
+    case 'compare': {
+      const { base: b, times: t, compare: c, scene } = tp.p;
+      if (focus === 'diagram') return { q: `図の□（${scene.baseName}の${scene.measure}と、倍の目もり）`, a: `${b}${scene.unit} と ${t}` };
+      if (focus === 'shiki') return { q: `${scene.compareName}の${scene.measure}を もとめる式`, a: `${b} × ${t}` };
+      if (focus === 'asview') return { q: `${scene.baseName}を1とみると ${scene.compareName}は いくつに あたるか`, a: `${t}` };
+      return { q: `${b} × ${t}`, a: `${c}${scene.unit}` };
+    }
+    case 'base': {
+      const { base: b, times: t, compare: c, scene } = tp.p;
+      if (focus === 'diagram') return { q: `図の□（${scene.compareName}の${scene.measure}と、もとにする量の目もり）`, a: `${c}${scene.unit} と 1` };
+      if (focus === 'relation') return { q: `${scene.baseName}の${scene.measure}を□として かけ算の式に表す`, a: `□ × ${t} ＝ ${c}` };
+      if (focus === 'shiki') return { q: `□を もとめる式`, a: `${c} ÷ ${t}` };
+      return { q: `${c} ÷ ${t}`, a: `${b}${scene.unit}` };
+    }
+    case 'ratio': {
+      const { pair, beforeA, afterA, timesA, beforeB, afterB, timesB, askSmaller, answerLabel, diffA } = tp.p;
+      const label = answerLabel === 'A' ? pair.itemA : pair.itemB;
+      if (focus === 'diff') return { q: `${pair.itemA}・${pair.itemB}は それぞれ 何${pair.unit} ふえたか`, a: `どちらも ${diffA}${pair.unit}` };
+      if (focus === 'shiki') return { q: `${pair.itemA}・${pair.itemB}の 倍を もとめる式`, a: `${afterA} ÷ ${beforeA} と ${afterB} ÷ ${beforeB}` };
+      if (focus === 'judge') return { q: `変化が ${askSmaller ? '小さい' : '大きい'}のは どちらか`, a: label };
+      if (focus === 'full') {
+        return {
+          q: `${pair.itemA}(${beforeA}→${afterA}) と ${pair.itemB}(${beforeB}→${afterB})：差と倍で くらべる`,
+          a: `${timesA}倍 と ${timesB}倍 → 変化が ${askSmaller ? '小さい' : '大きい'}のは ${label}`,
+        };
+      }
+      return { q: `${pair.itemA}・${pair.itemB}は もとの 何倍か`, a: `${timesA}倍 と ${timesB}倍` };
+    }
+    case 'kihon': {
+      const { base: b, times: t, compare: c, scene, missing } = tp.p;
+      const ans = missing === 'compare' ? c : missing === 'times' ? t : b;
+      return { q: `${scene.baseName} と ${scene.compareName}（${missing} を もとめる）`, a: String(ans) };
+    }
     case 'word':
       if (tp.p.kind === 'ratio') {
-        return { q: tp.p.text, a: `${tp.p.biggerLabel === 'A' ? tp.p.pair?.itemA : tp.p.pair?.itemB}` };
+        return { q: tp.p.text, a: `${tp.p.answerLabel === 'A' ? tp.p.pair?.itemA : tp.p.pair?.itemB}` };
       }
       return { q: tp.p.text, a: `${tp.p.finalAnswer}${tp.p.finalUnit}` };
     case 'error':
-      return { q: `まちがい探し：${tp.p.wrongExpr}`, a: `正しくは ${tp.p.correctExpr}` };
+      return { q: `まちがい探し「${tp.p.wrongExpr}」`, a: `正しくは ${tp.p.correctExpr}` };
   }
 }
 
-export const OMOTE_MAX = TEST_STEPS.filter((s) => s.section === '表').reduce((a, s) => a + s.points, 0); // 100
-export const SANKOU_MAX = TEST_STEPS.filter((s) => s.section === '参考').reduce((a, s) => a + s.points, 0); // 0
-export const TOTAL_MAX = OMOTE_MAX + SANKOU_MAX; // 100
+const sumPoints = (section: Section) =>
+  TEST_DAIMONS.filter((d) => d.section === section)
+    .reduce((a, d) => a + d.parts.reduce((x, p) => x + p.points, 0), 0);
+
+export const OMOTE_MAX = sumPoints('表');    // 100
+export const SANKOU_MAX = sumPoints('参考'); // 0
+export const TOTAL_MAX = OMOTE_MAX + SANKOU_MAX;

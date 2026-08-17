@@ -28,8 +28,6 @@ export interface Badge {
 
 export function computeBadges(d: BadgeData): Badge[] {
   const omote = d.bestTestOmote ?? 0;
-  const ura = d.bestTestUra ?? 0;
-  const total = d.bestTestTotal ?? 0;
   const list: Badge[] = [
     { id: 'first', title: 'はじめの一歩', desc: '1問 クリア', icon: 'Star', earned: d.totalCorrect >= 1 },
     // がんばり（累計クリア数）
@@ -43,30 +41,17 @@ export function computeBadges(d: BadgeData): Badge[] {
     { id: 's20', title: 'ノーミス20', desc: '20問連続 ノーミス', icon: 'Zap', earned: d.maxStreak >= 20 },
     { id: 's30', title: 'ノーミス30', desc: '30問連続 ノーミス', icon: 'Target', earned: d.maxStreak >= 30 },
     { id: 's50', title: 'ノーミス50', desc: '50問連続 ノーミス', icon: 'Rocket', earned: d.maxStreak >= 50 },
-    // テスト表面（知識技能・満点100）
-    { id: 'to50', title: '表テスト50', desc: 'テスト表で 50点いじょう', icon: 'ClipboardCheck', earned: omote >= 50 },
-    { id: 'to75', title: '表テスト75', desc: 'テスト表で 75点いじょう', icon: 'ClipboardCheck', earned: omote >= 75 },
-    { id: 'to90', title: '表テスト90', desc: 'テスト表で 90点いじょう', icon: 'ClipboardCheck', earned: omote >= 90 },
-    { id: 'to100', title: '表テスト満点', desc: 'テスト表で 100点', icon: 'Trophy', earned: omote >= 100 },
-    // テスト裏面（思考判断表現・満点50）
-    { id: 'tu25', title: '裏テスト25', desc: 'テスト裏で 25点いじょう', icon: 'BookOpen', earned: ura >= 25 },
-    { id: 'tu40', title: '裏テスト40', desc: 'テスト裏で 40点いじょう', icon: 'BookOpen', earned: ura >= 40 },
-    { id: 'tu50', title: '裏テスト満点', desc: 'テスト裏で 50点', icon: 'Award', earned: ura >= 50 },
-    // テスト両面（表＋裏・満点150）
-    { id: 'tt75', title: '両面テスト75', desc: '両面テストで 75点いじょう', icon: 'Gem', earned: total >= 75 },
-    { id: 'tt100', title: '両面テスト100', desc: '両面テストで 100点いじょう', icon: 'Gem', earned: total >= 100 },
-    { id: 'tt140', title: '両面テスト140', desc: '両面テストで 140点いじょう', icon: 'Crown', earned: total >= 140 },
-    { id: 'tt150', title: '両面テスト満点', desc: '両面テストで 150点', icon: 'Crown', earned: total >= 150 },
-    // くり返し満点（高難度・3段階）: 一度の満点より ずっと むずかしい「安定して満点」を評価する
-    { id: 'to100x3', title: '表マイスターI', desc: '表テストで 満点を 3回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 3 },
-    { id: 'to100x5', title: '表マイスターII', desc: '表テストで 満点を 5回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 5 },
-    { id: 'to100x10', title: '表マイスターIII', desc: '表テストで 満点を 10回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 10 },
-    { id: 'tu50x3', title: '裏マイスターI', desc: '裏テストで 満点を 3回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.ura ?? 0) >= 3 },
-    { id: 'tu50x5', title: '裏マイスターII', desc: '裏テストで 満点を 5回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.ura ?? 0) >= 5 },
-    { id: 'tu50x10', title: '裏マイスターIII', desc: '裏テストで 満点を 10回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.ura ?? 0) >= 10 },
-    { id: 'tt150x3', title: '両面マイスターI', desc: '両面テストで 満点を 3回', icon: 'Gem', earned: (d.testPerfectCounts?.total ?? 0) >= 3 },
-    { id: 'tt150x5', title: '両面マイスターII', desc: '両面テストで 満点を 5回', icon: 'Gem', earned: (d.testPerfectCounts?.total ?? 0) >= 5 },
-    { id: 'tt150x10', title: '両面マイスターIII', desc: '両面テストで 満点を 10回', icon: 'Gem', earned: (d.testPerfectCounts?.total ?? 0) >= 10 },
+    // 本番テスト（表・知識技能のみ満点100。この単元のテストに「裏50点」は無いため、
+    // 裏・両面（表＋裏）のバッジは作らない：uraMaxが常に0のため永久に獲得できず、
+    // 最終称号を含む全バッジ未達成を招くバグになるのを避けている）
+    { id: 'to50', title: 'テスト50', desc: 'テストで 50点いじょう', icon: 'ClipboardCheck', earned: omote >= 50 },
+    { id: 'to75', title: 'テスト75', desc: 'テストで 75点いじょう', icon: 'ClipboardCheck', earned: omote >= 75 },
+    { id: 'to90', title: 'テスト90', desc: 'テストで 90点いじょう', icon: 'ClipboardCheck', earned: omote >= 90 },
+    { id: 'to100', title: 'テスト満点', desc: 'テストで 100点', icon: 'Trophy', earned: omote >= 100 },
+    // くり返し満点（高難度・2段階）: 一度の満点より ずっと むずかしい「安定して満点」を評価する。
+    // 10回は子どもには挫折ラインになりやすいため、上限は5回までにとどめる。
+    { id: 'to100x3', title: 'テストマイスターI', desc: 'テストで 満点を 3回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 3 },
+    { id: 'to100x5', title: 'テストマイスターII', desc: 'テストで 満点を 5回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 5 },
   ];
   MODULES.forEach((m) =>
     list.push({
