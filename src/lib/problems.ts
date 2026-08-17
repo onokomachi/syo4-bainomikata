@@ -239,16 +239,16 @@ export function generateRatioCompare(level: RatioCompareLevel): RatioCompareProb
       explain: `${pair.itemA}は ${afterA} ÷ ${beforeA} ＝ ${timesA}倍。${pair.itemB}は ${afterB} ÷ ${beforeB} ＝ ${timesB}倍。倍が 大きい ${biggerLabel === 'A' ? pair.itemA : pair.itemB} の方が よく変化しているね。`,
     };
   }
-  // ratio-compare-diff: 差は同じ（または差だけでは分かりにくい）が、倍で比べると結論がちがう
-  const beforeA = rnd(30, 60);
+  // ratio-compare-diff: 差は同じ（または差だけでは分かりにくい）が、倍で比べると結論がちがう。
+  // timesA・timesBを先に整数で決め、そこから差(diff)が両者で一致するように beforeA を逆算する
+  // （数値入力は整数しか受け付けないため、timesBが必ず整数になるよう構成する。割り算の余りに頼らない）。
   const timesA = 2;
+  const timesB = pick([3, 4, 5, 6]);
+  const beforeB = rnd(8, 20);
+  const diff = beforeB * (timesB - 1); // afterB − beforeB
+  const beforeA = diff; // timesA=2 なので diffA(=beforeA) が diff と一致する
   const afterA = beforeA * timesA;
-  const diff = afterA - beforeA;
-  // B は同じ差になるように、beforeB を diff の約数から選び timesB を diff/beforeB + 1 にする
-  const divisors = [2, 3, 4, 5, 6].filter((d) => diff % d === 0 && diff / d !== beforeA && diff / d >= 5);
-  const beforeB = divisors.length > 0 ? diff / pick(divisors) : Math.max(5, Math.floor(beforeA / 2));
   const afterB = beforeB + diff;
-  const timesB = Math.round((afterB / beforeB) * 100) / 100;
   const biggerLabel: 'A' | 'B' = timesA >= timesB ? 'A' : 'B';
   return {
     pair, beforeA, afterA, timesA, beforeB, afterB, timesB,

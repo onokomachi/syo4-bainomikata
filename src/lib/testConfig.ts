@@ -109,7 +109,7 @@ export function describeProblem(tp: TestProblem): { q: string; a: string } {
       }
       return { q: tp.p.text, a: `${tp.p.finalAnswer}${tp.p.finalUnit}` };
     case 'error':
-      return { q: `まちがい探し：${tp.p.wrongExpr}`, a: `正しくは ${tp.p.correctExpr}` };
+      return { q: `まちがい探し「${tp.p.wrongExpr}」`, a: `正しくは ${tp.p.correctExpr}` };
   }
 }
 
