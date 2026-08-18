@@ -16,7 +16,7 @@ interface Props {
 const THEMES: { id: Theme; label: string; icon: React.ReactNode; swatch: string }[] = [
   { id: 'light', label: 'ノーマル', icon: <Sun size={22} />, swatch: 'bg-surface border-slate-300' },
   { id: 'dark', label: 'マトリックス', icon: <Terminal size={22} />, swatch: 'bg-black border-green-500' },
-  { id: 'bubble', label: 'バブル', icon: <Droplets size={22} />, swatch: 'bg-[#021b24] border-cyan-300' },
+  { id: 'bubble', label: 'バブル', icon: <Droplets size={22} />, swatch: 'bg-white border-cyan-300' },
   { id: 'sakura', label: '桜吹雪', icon: <Flower2 size={22} />, swatch: 'bg-[#12051c] border-pink-400' },
   { id: 'snow', label: 'スノーワールド', icon: <Snowflake size={22} />, swatch: 'bg-[#071322] border-sky-300' },
   { id: 'kaleido', label: '時空神', icon: <Sparkles size={22} />, swatch: 'bg-[#05010c] border-fuchsia-400' },
@@ -40,7 +40,7 @@ export const Settings: React.FC<Props> = ({ onClose }) => {
   const unselCls = 'border-line hover:border-faint';
   // 暗背景テーマのときはオーバーレイを透明にして、背後の動く背景をそのまま見せる
   // （blur や暗幕で背景がにじまないようにする）。
-  const neonThemes: Theme[] = ['dark', 'bubble', 'sakura', 'snow', 'kaleido'];
+  const neonThemes: Theme[] = ['dark', 'sakura', 'snow', 'kaleido'];
   const overlayCls = neonThemes.includes(theme) ? 'bg-black/20' : 'bg-slate-900/40 backdrop-blur-sm';
 
   return (
