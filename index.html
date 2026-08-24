@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
-    <title>わり算ランド｜わり算の筆算ラボEX</title>
+    <title>倍の見方ラボ｜倍の見方マスターEX</title>
     <!-- テーマの FOUC（白フラッシュ）防止 その1:
          <head> の時点では document.body は未生成（null）なので、ここでは必ず存在する
          documentElement（<html>）に背景色を即時セットする。これで最初のペイントから
@@ -14,7 +14,7 @@
         try {
           var raw = localStorage.getItem('hissan_settings_v1');
           var theme = (raw && JSON.parse(raw).state && JSON.parse(raw).state.theme) || 'light';
-          var BG = { light: '#eef2f7', dark: '#000000', aurora: '#020309', sakura: '#0d0416', inferno: '#0a0100', tenkuu: '#041022' };
+          var BG = { light: '#eef2f7', dark: '#000000', bubble: '#ffffff', sakura: '#0d0416', snow: '#071322', kaleido: '#05010c' };
           var bg = BG[theme] || '#eef2f7';
           window.__theme = theme;
           document.documentElement.style.backgroundColor = bg;
@@ -30,7 +30,7 @@
       (function () {
         try {
           var theme = window.__theme || 'light';
-          var BG = { light: '#eef2f7', dark: '#000000', aurora: '#020309', sakura: '#0d0416', inferno: '#0a0100', tenkuu: '#041022' };
+          var BG = { light: '#eef2f7', dark: '#000000', bubble: '#ffffff', sakura: '#0d0416', snow: '#071322', kaleido: '#05010c' };
           var bg = BG[theme] || '#eef2f7';
           document.body.setAttribute('data-theme', theme);
           document.body.style.backgroundColor = bg;
