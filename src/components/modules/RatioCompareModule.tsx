@@ -12,6 +12,7 @@
  * 大きい方だけで練習すると、反射で大きい方を選んで誤答するため。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -105,6 +106,9 @@ export const RatioCompareRound: React.FC<{
   const [hint, setHint] = useState<string | null>(null);
   const [pickedWrong, setPickedWrong] = useState<'A' | 'B' | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'ratio-compare', skillId: level, record: recordResult });
 
   const p = problem;
   const isDone = stageIdx >= stages.length;
@@ -117,12 +121,12 @@ export const RatioCompareRound: React.FC<{
   const diffStageIdx = stages.indexOf('diff');
   const diffRevealed = diffStageIdx !== -1 && stageIdx > diffStageIdx;
 
-  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); setHint(h); };
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint(h); };
 
   const finish = () => {
     playClear();
     confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'ratio-compare', skillId: level, label: `${p.pair.itemA} と ${p.pair.itemB}`, correct: mistakes === 0 });
+    rec.finish(`${p.pair.itemA} と ${p.pair.itemB}`);
     onResult?.(mistakes === 0);
     setStageIdx(stages.length);
   };
@@ -150,7 +154,7 @@ export const RatioCompareRound: React.FC<{
     if (label === p.answerLabel) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake();
       setPickedWrong(label);
       setHint(`倍で くらべよう。${p.pair.itemA}は ${p.timesA}倍、${p.pair.itemB}は ${p.timesB}倍。今回 きかれているのは 変化が ${p.askSmaller ? '小さい' : '大きい'}方だよ。`);
     }

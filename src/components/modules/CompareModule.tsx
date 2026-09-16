@@ -5,6 +5,7 @@
  * 図 → 式 → 答え → 「1とみると」の段階に分けて解く。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -96,18 +97,21 @@ export const CompareRound: React.FC<{
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'compare', skillId: level, record: recordResult });
 
   const { base, times, compare, scene } = problem;
   const shiki = useMemo(() => buildShikiChoices('compare', base, times, compare), [base, times, compare]);
   const isDone = stageIdx >= stages.length;
   const stage = stages[stageIdx];
 
-  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); setHint(h); };
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint(h); };
 
   const finish = () => {
     playClear();
     confetti({ particleCount: 110, spread: 65, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'compare', skillId: level, label: `${base} × ${times}`, correct: mistakes === 0 });
+    rec.finish(`${base} × ${times}`);
     onResult?.(mistakes === 0);
     setStageIdx(stages.length);
   };
