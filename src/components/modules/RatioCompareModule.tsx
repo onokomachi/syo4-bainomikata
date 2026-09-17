@@ -91,8 +91,10 @@ export const RatioCompareRound: React.FC<{
   focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<RatioCompareProblem>(() => given ?? generateRatioCompare(level));
   const stages = useMemo<RoundFocus[]>(() => {
     if (focus !== 'full') return [focus];
@@ -121,7 +123,7 @@ export const RatioCompareRound: React.FC<{
   const diffStageIdx = stages.indexOf('diff');
   const diffRevealed = diffStageIdx !== -1 && stageIdx > diffStageIdx;
 
-  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint(h); };
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); onMiss?.(); setHint(h); };
 
   const finish = () => {
     playClear();
@@ -154,7 +156,7 @@ export const RatioCompareRound: React.FC<{
     if (label === p.answerLabel) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setPickedWrong(label);
       setHint(`倍で くらべよう。${p.pair.itemA}は ${p.timesA}倍、${p.pair.itemB}は ${p.timesB}倍。今回 きかれているのは 変化が ${p.askSmaller ? '小さい' : '大きい'}方だよ。`);
     }

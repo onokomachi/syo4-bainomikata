@@ -86,8 +86,10 @@ export const CompareRound: React.FC<{
   focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaseCompareProblem>(() => given ?? generateCompare(level));
   const stages = useMemo<RoundFocus[]>(
     () => (focus === 'full' ? ['diagram', 'shiki', 'answer'] : [focus]),
@@ -106,7 +108,7 @@ export const CompareRound: React.FC<{
   const isDone = stageIdx >= stages.length;
   const stage = stages[stageIdx];
 
-  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint(h); };
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); onMiss?.(); setHint(h); };
 
   const finish = () => {
     playClear();

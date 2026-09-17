@@ -26,6 +26,7 @@ import {
   KihonLevel, BaiTapeProblem,
 } from './problems';
 import { RoundFocus } from '../components/shared/roundTypes';
+import { skillToModuleId, type ModuleId } from '../store/progressStore';
 
 export type TestProblem =
   | { kind: 'kihon'; level: KihonLevel; p: BaiTapeProblem }
@@ -171,3 +172,48 @@ const sumPoints = (section: Section) =>
 export const OMOTE_MAX = sumPoints('表');    // 100
 export const SANKOU_MAX = sumPoints('参考'); // 0
 export const TOTAL_MAX = OMOTE_MAX + SANKOU_MAX;
+
+/* ---------------- 答案に残す記号と、テストのあとの「やり方」 ---------------- */
+
+/**
+ * 出題から項目の記号を取り出す。カタログと同じ文字列にする。
+ * 大問の題名は問題を作り直すたびに変わりうるので、集計の軸にはできない。
+ */
+export function skillIdOf(tp: TestProblem): string {
+  return tp.kind === 'error' ? (tp.preset as string) : (tp.level as string);
+}
+
+/**
+ * まちがえた問題に添える、やり方のひとこと。
+ * テスト中は出さない。**終わってから**まちがえた問題にだけ添える。
+ */
+const HOW_BY_SKILL: Record<string, string> = {
+  'times-big': 'もとにする量を 1と 見て、くらべる量が その 何こ分かを 考えよう。',
+  'compare-big': 'くらべる量 ÷ もとにする量 で 倍が もとめられるよ。',
+  'base-big': 'もとにする量は、くらべる量 ÷ 倍 で もとめられるよ。',
+  'ratio-compare-diff': '「どちらが よく のびたか」は 差ではなく 倍で くらべるよ。',
+  'ratio-compare-basic': 'もとにする量が ちがうときは、倍に して そろえてから くらべよう。',
+};
+
+const HOW_BY_MODULE: Record<string, string> = {
+  kihon: 'まず テープ図の どこが「もとにする量」かを 決めよう。そこが 1だよ。',
+  times: 'もとにする量を 1と 見て、その 何こ分かを 考えよう。',
+  compare: 'くらべる量 ÷ もとにする量 ＝ 倍。',
+  base: 'もとにする量 ＝ くらべる量 ÷ 倍。',
+  ratio: '差では なく 倍で くらべると、もとの大きさが ちがっても くらべられるよ。',
+  wp: '文から「もとにする量」と「くらべる量」を 先に 見つけよう。',
+  eh: 'どれを 1と 見たのかを たしかめよう。そこが ちがうと 答えも ずれるよ。',
+  mock: '見直しは「もとにする量は どれか」から。1と 見るものを まちがえていないか 見よう。',
+};
+
+export function howTo(skillId: string): string {
+  return HOW_BY_SKILL[skillId]
+    ?? HOW_BY_MODULE[skillId.split('-')[0] ?? '']
+    ?? 'もう一度 ゆっくり やってみよう。';
+}
+
+/** その項目を練習できるモジュール。テストのあと「れんしゅうする」で飛ぶ先。 */
+export function practiceModuleOf(skillId: string): ModuleId | null {
+  const m = skillToModuleId(skillId);
+  return m === 'mock-test' || m === 'boss-battle' ? null : m;
+}

@@ -86,8 +86,10 @@ export const KihonRound: React.FC<{
   focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaiTapeProblem>(() => given ?? generateKihon(level));
   const stages = useMemo<RoundFocus[]>(
     () => (focus === 'full' ? ['diagram', 'answer'] : [focus]),
@@ -172,7 +174,7 @@ export const KihonRound: React.FC<{
 
   const submitAnswer = (v: string) => {
     if (Number(v) === answer) advance();
-    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); setHint(problem.hint); }
+    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); onMiss?.(); setHint(problem.hint); }
   };
 
   const questionText = missing === 'compare'
