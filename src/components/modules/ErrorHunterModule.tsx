@@ -53,8 +53,10 @@ export const BaiErrorRound: React.FC<{
   startStage?: 'judge' | 'fix';
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ example, startStage = 'judge', onNext, onResult, nextLabel = 'つぎの もんだい' }) => {
+}> = ({ example, startStage = 'judge', onNext, onResult, onMiss, nextLabel = 'つぎの もんだい' }) => {
   const [ex] = useState<BaiErrorExample>(() => example ?? generateBaiError());
   const [stage, setStage] = useState<'judge' | 'fix' | 'reason' | 'done'>(startStage);
   const [mistakes, setMistakes] = useState(0);
@@ -79,7 +81,7 @@ export const BaiErrorRound: React.FC<{
       else setStage('fix'); // まちがいを「まちがい」と見ぬけた
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(
         ex.isCorrect
           ? 'もう一度 よく見て。もとにする量 と くらべられる量 が どちらか、式を たしかめよう。'
@@ -94,7 +96,7 @@ export const BaiErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(ex.fixHint);
     }
   };
@@ -103,7 +105,7 @@ export const BaiErrorRound: React.FC<{
     if (i === ex.correctReasonIndex) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint('うーん、ちがうみたい。まちがった式と 正しい式を くらべて、どこが ちがうか 考えよう。');
     }
   };

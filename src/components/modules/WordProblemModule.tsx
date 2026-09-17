@@ -81,8 +81,10 @@ export const WordRound: React.FC<{
   problem?: BaiWordProblem;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaiWordProblem>(() => given ?? generateWord(level));
   const isRatio = problem.kind === 'ratio';
   const [stage, setStage] = useState<'shiki' | 'calc' | 'timesA' | 'timesB' | 'judge' | 'done'>(isRatio ? 'timesA' : 'shiki');
@@ -111,7 +113,7 @@ export const WordRound: React.FC<{
       setStage('calc');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setPickedWrong(i);
       setHint('ようすを 思いうかべよう。「もとにする量」と「くらべられる量」の どちらを 求めるかで、しきが 決まるよ。');
     }
@@ -122,7 +124,7 @@ export const WordRound: React.FC<{
       finish();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`しきは ${problem.choices![problem.correctIndex!]} だね。ていねいに 計算してみよう。`);
     }
   };
@@ -134,7 +136,7 @@ export const WordRound: React.FC<{
       setStage('timesB');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`${problem.pair?.itemA}は ${problem.beforeA}${problem.pair?.unit} → ${problem.afterA}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
     }
   };
@@ -146,7 +148,7 @@ export const WordRound: React.FC<{
       setStage('judge');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`${problem.pair?.itemB}は ${problem.beforeB}${problem.pair?.unit} → ${problem.afterB}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
     }
   };
@@ -156,7 +158,7 @@ export const WordRound: React.FC<{
       finish();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1); rec.mistake();
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setPickedJudge(label);
       setHint(`倍の 大きさで くらべよう。${problem.pair?.itemA}は ${problem.timesA}倍、${problem.pair?.itemB}は ${problem.timesB}倍。今回 きかれているのは 変化が ${problem.askSmaller ? '小さい' : '大きい'}方だよ。`);
     }
