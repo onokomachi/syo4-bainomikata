@@ -7,7 +7,7 @@
  * 手つづきの暗記だけが残り、5年「割合」でつまずきやすくなる。
  */
 import React, { useMemo, useState } from 'react';
-import { useRoundRecorder } from 'learning-app-kit/react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -181,6 +181,11 @@ export const BaseRound: React.FC<{
             </div>
 
             {hint && <HintBox tone="wrong">{hint}</HintBox>}
+
+
+            {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+            <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
             {stage === 'relation' && (
               <ChoiceStage

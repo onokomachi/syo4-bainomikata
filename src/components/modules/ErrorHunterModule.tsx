@@ -13,6 +13,7 @@ import { AnswerEntry } from '../shared/AnswerEntry';
 import { BaiErrorExample, generateBaiError } from '../../lib/problems';
 import { useProgressStore } from '../../store/progressStore';
 import { playClear, playSoftTry } from '../../lib/sound';
+import { ScratchPadToggle } from 'learning-app-kit/react';
 
 interface Props { onExit: () => void; }
 
@@ -130,6 +131,9 @@ export const BaiErrorRound: React.FC<{
               <Lightbulb className="text-amber-500 shrink-0" size={20} /><p className="text-muted font-bold">{hint}</p>
             </div>
           )}
+
+          {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+          <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
           {stage === 'judge' && (
             <>
