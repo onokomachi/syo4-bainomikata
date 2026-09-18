@@ -5,7 +5,7 @@
  * 「Aの倍→Bの倍→どちらが大きいか」の流れになる。
  */
 import React, { useState } from 'react';
-import { useRoundRecorder } from 'learning-app-kit/react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Check, Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -176,6 +176,11 @@ export const WordRound: React.FC<{
         </div>
 
         {hint && <HintBox tone={(pickedWrong !== null && stage === 'shiki') || pickedJudge ? 'wrong' : 'hint'}>{hint}</HintBox>}
+
+
+        {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+        <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
         {!isRatio && stage === 'shiki' && (
           <div>

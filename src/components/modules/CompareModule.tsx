@@ -5,7 +5,7 @@
  * 図 → 式 → 答え → 「1とみると」の段階に分けて解く。
  */
 import React, { useMemo, useState } from 'react';
-import { useRoundRecorder } from 'learning-app-kit/react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -182,6 +182,11 @@ export const CompareRound: React.FC<{
             </div>
 
             {hint && <HintBox tone="wrong">{hint}</HintBox>}
+
+
+            {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+            <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
             {stage === 'shiki' && (
               <ChoiceStage
