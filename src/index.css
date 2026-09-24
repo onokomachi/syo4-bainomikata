@@ -114,22 +114,22 @@
     --panel-strong: rgba(40, 80, 130, 0.85);
   }
 
-  /* 時空神（じくうしん）：闇の底から広がる レインボーの放射もよう。バッジ100%で解放 */
+  /* 時空神（じくうしん）：宇宙の藍 × 古代の金。時空神の絵の万華鏡。バッジ100%で解放 */
   body[data-theme='kaleido'] {
-    --c-bg: #05010c;
-    --c-surface: #0f0620;
-    --c-surface-2: #070312;
-    --c-surface-3: #180a30;
-    --c-content: #ffe8ff;
-    --c-muted: #e0a8ff;
-    --c-faint: #a373c9;
-    --c-line: #5b3080;
-    --c-brand: #ff3ec8;
-    --c-brand-strong: #ffa8ec;
-    --c-on-brand: #200015;
-    --neon: 255, 70, 210;
-    --panel: #120726;
-    --panel-strong: rgba(90, 20, 110, 0.85);
+    --c-bg: #06041a;
+    --c-surface: #110c2c;
+    --c-surface-2: #0a0720;
+    --c-surface-3: #1c1542;
+    --c-content: #fff5dc;
+    --c-muted: #efd293;
+    --c-faint: #b0955e;
+    --c-line: #6e5526;
+    --c-brand: #e6b44c;
+    --c-brand-strong: #ffe3a0;
+    --c-on-brand: #1c1100;
+    --neon: 232, 182, 76;
+    --panel: #120d2e;
+    --panel-strong: rgba(44, 30, 96, 0.9);
   }
 
 
@@ -154,7 +154,7 @@
   /* スマホの FOUC・合成誤差対策: 暗背景テーマは背景色を確実に固定する（バブルは白基調なので対象外） */
   body[data-theme='sakura'] { background-color: #0d0416 !important; }
   body[data-theme='snow'] { background-color: #071322 !important; }
-  body[data-theme='kaleido'] { background-color: #05010c !important; }
+  body[data-theme='kaleido'] { background-color: #06041a !important; }
   body[data-theme='bubble'] { background-color: #ffffff !important; }
 
   /* バブル：白基調なので発光なしのふつうの文字（light テーマと同じ描画） */
@@ -173,10 +173,10 @@
     text-shadow: 0 0 5px rgba(150, 210, 255, 0.45), 0 0 14px rgba(220, 240, 255, 0.25);
     letter-spacing: 0.03em;
   }
-  /* 時空神：虹色にゆらめく発光 */
+  /* 時空神：金のかがやき＋藍の余韻 */
   body[data-theme='kaleido'] {
     font-family: "BIZ UDPGothic", "Inter", ui-sans-serif, sans-serif;
-    text-shadow: 0 0 5px rgba(255, 70, 210, 0.45), 0 0 12px rgba(160, 120, 255, 0.25);
+    text-shadow: 0 0 5px rgba(255, 200, 110, 0.4), 0 0 12px rgba(120, 140, 255, 0.22);
     letter-spacing: 0.03em;
   }
 }
@@ -328,6 +328,11 @@ body:is([data-theme='sakura'], [data-theme='snow'], [data-theme='kaleido']) :is(
   background-image: linear-gradient(135deg, var(--panel-strong), rgba(var(--neon), 0.06)) !important;
   border: 1px solid rgba(var(--neon), 0.55);
   box-shadow: 0 0 18px rgba(var(--neon), 0.3);
+}
+
+/* 時空神：背景の絵が文字の裏に透けないよう、グラデーションのバナーも不透明な藍×金にする */
+body[data-theme='kaleido'] :is(.bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-b, .bg-gradient-to-bl) {
+  background-image: linear-gradient(135deg, rgba(48, 32, 104, 0.95), rgba(20, 13, 52, 0.95)) !important;
 }
 
 /* 半透明の白タイル（bg-white/20 等）→ ネオンタイル */
