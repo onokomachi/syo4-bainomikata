@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { getProgressStorage } from '../services/progressRepository';
+import { inferInitialState, scheduleAfterResult, type ReviewState } from 'learning-app-kit/review';
 
 export type ModuleId =
   | 'kihon'
@@ -29,6 +30,16 @@ export interface TestStepResult {
   points: number;
   earned: number;
   correct: boolean; // 一発正解できたか
+  /**
+   * 項目の記号。カタログと同じ文字列にする。
+   * これが無いと「どの種類の問題が学級全体で弱いか」を出せない
+   * （大問の題名は問題が変わるたびに変わりうるので、集計の軸にできない）。
+   */
+  skillId?: string;
+  /** 何回まちがえたか。2回で×にして次へ進めた問題は 2 になる */
+  misses?: number;
+  /** 「わからない」で次へ進めたか */
+  gaveUp?: boolean;
 }
 
 export interface TestDetail {
@@ -50,6 +61,14 @@ export interface ResultRecord {
   label: string; // 履歴表示用（例: "72 ÷ 3"）
   correct: boolean; // ノーミスで完答できたか
   detail?: TestDetail; // 本番テストのときだけ。各設問の問題・正答・○×
+  /** その問題で何回まちがえたか。0なら一発正解 */
+  mistakes?: number;
+  /**
+   * 正解までたどりつかずに離れたか。
+   * これを残さないと「できなかった問題」ほど記録から消える。
+   * 分析のためだけの印で、熟達度や復習の予定は動かさない。
+   */
+  abandoned?: boolean;
 }
 
 export interface SkillMastery {
@@ -57,6 +76,9 @@ export interface SkillMastery {
   corrects: number;
   perfectStreak?: number; // 連続ノーミス数（熟達バー表示用。ミスで0にリセット）
 }
+
+// 授業4時間の枠内でも無理なく熟達バーが満タンになるよう、必要な連続ノーミス数を 5→3 に短縮
+const MASTERY_STREAK = 3;
 
 /** skillId のプレフィックスから所属モジュールを判定 */
 export function skillToModuleId(skillId: string): ModuleId | null {
@@ -75,6 +97,12 @@ export function skillToModuleId(skillId: string): ModuleId | null {
 interface ProgressState {
   logs: ResultRecord[];
   mastery: Record<string, SkillMastery>;
+  /**
+   * 間隔反復のスケジュール（learning-app-kit/review）。skillId → { box, lastTs, nextDueTs }。
+   * 正解するたびに次の復習までの間隔が 1→3→7→14→30 日と伸び、ミスで最初に戻る。
+   * ホームの「きょうの ふくしゅう」がここを見る。
+   */
+  review: Record<string, ReviewState>;
   currentStreak: number;
   maxStreak: number;
   dailyGoal: number;
@@ -107,6 +135,7 @@ export const useProgressStore = create<ProgressState>()(
     (set, get) => ({
       logs: [],
       mastery: {},
+      review: {},
       currentStreak: 0,
       maxStreak: 0,
       dailyGoal: 10,
@@ -128,8 +157,11 @@ export const useProgressStore = create<ProgressState>()(
           };
           const logs = [entry, ...state.logs].slice(0, 200);
 
-          // 授業4時間の枠内でも無理なく熟達バーが満タンになるよう、必要な連続ノーミス数を 5→3 に短縮
-          const MASTERY_STREAK = 3;
+          // とちゅうでやめた記録は、分析のために残すだけにする。
+          // 熟達度・連続記録・復習の予定は動かさない——開いて少しやってやめたことで
+          // 子どもの側が損をするのは、ミスを罰しない方針に反するため。
+          if (rec.abandoned) return { logs };
+
           const prev = state.mastery[rec.skillId] ?? { attempts: 0, corrects: 0, perfectStreak: 0 };
           const newPerfectStreak = rec.correct ? Math.min((prev.perfectStreak ?? 0) + 1, MASTERY_STREAK) : 0;
           const mastery = {
@@ -146,6 +178,12 @@ export const useProgressStore = create<ProgressState>()(
           const masteredModules = newPerfectStreak >= MASTERY_STREAK && !state.masteredModules[rec.moduleId]
             ? { ...state.masteredModules, [rec.moduleId]: true }
             : state.masteredModules;
+
+          // 間隔反復のスケジュール更新。本番テスト・ボス戦は「復習で戻る先」にならないので対象外
+          const review =
+            rec.moduleId === 'mock-test' || rec.moduleId === 'boss-battle'
+              ? state.review
+              : { ...state.review, [rec.skillId]: scheduleAfterResult(state.review[rec.skillId], rec.correct) };
 
           const currentStreak = rec.correct ? state.currentStreak + 1 : 0;
           const maxStreak = Math.max(state.maxStreak, currentStreak);
@@ -178,7 +216,7 @@ export const useProgressStore = create<ProgressState>()(
             }
           }
 
-          return { logs, mastery, currentStreak, maxStreak, totalCorrect, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules };
+          return { logs, mastery, review, currentStreak, maxStreak, totalCorrect, moduleCounts, bestTestOmote, bestTestUra, bestTestTotal, testPerfectCounts, masteredModules };
         });
       },
 
@@ -190,7 +228,7 @@ export const useProgressStore = create<ProgressState>()(
 
       getMasteryStreak: (skillId) => {
         const m = get().mastery[skillId];
-        return Math.min((m?.perfectStreak ?? 0) / 5, 1);
+        return Math.min((m?.perfectStreak ?? 0) / MASTERY_STREAK, 1);
       },
 
       getModuleCount: (moduleId) => get().moduleCounts[moduleId] ?? 0,
@@ -213,20 +251,32 @@ export const useProgressStore = create<ProgressState>()(
       setDebugAllBadges: (v) => set({ debugAllBadges: v }),
 
       reset: () => set({
-        logs: [], mastery: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
+        logs: [], mastery: {}, review: {}, currentStreak: 0, maxStreak: 0, totalCorrect: 0, moduleCounts: {},
         bestTestOmote: 0, bestTestUra: 0, bestTestTotal: 0, testPerfectCounts: { omote: 0, ura: 0, total: 0 }, masteredModules: {},
         debugAllBadges: false,
       }),
     }),
     {
       name: 'bai_progress_v1',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => getProgressStorage()),
       // v1→v2: 満点回数カウンタを新設。旧データには存在しないため 0 で補う
-      migrate: (persisted) => {
+      migrate: (persisted, version) => {
         const state = persisted as Partial<ProgressState> | undefined;
         if (state && !state.testPerfectCounts) {
           state.testPerfectCounts = { omote: 0, ura: 0, total: 0 };
+        }
+        if (state && version < 3 && !state.review) {
+          const review: Record<string, ReviewState> = {};
+          const logs = state.logs ?? [];
+          for (const [skillId, m] of Object.entries(state.mastery ?? {})) {
+            const mod = skillToModuleId(skillId);
+            if (mod === 'mock-test' || mod === 'boss-battle') continue;
+            // logs は新しい順なので、最初に見つかったものが直近
+            const lastTs = logs.find((l) => l.skillId === skillId)?.ts ?? 0;
+            review[skillId] = inferInitialState(m, lastTs);
+          }
+          state.review = review;
         }
         return state as ProgressState;
       },

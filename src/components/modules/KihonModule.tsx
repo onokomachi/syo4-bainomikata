@@ -6,6 +6,7 @@
  * まず図の上で3つの数の位置関係をつかませる。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -85,8 +86,10 @@ export const KihonRound: React.FC<{
   focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaiTapeProblem>(() => given ?? generateKihon(level));
   const stages = useMemo<RoundFocus[]>(
     () => (focus === 'full' ? ['diagram', 'answer'] : [focus]),
@@ -96,6 +99,9 @@ export const KihonRound: React.FC<{
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'kihon', skillId: level, record: recordResult });
 
   const { base, times, compare, scene, missing } = problem;
   const answer = missing === 'compare' ? compare : missing === 'times' ? times : base;
@@ -155,7 +161,7 @@ export const KihonRound: React.FC<{
   const finish = () => {
     playClear();
     confetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'kihon', skillId: level, label: `${scene.baseName} と ${scene.compareName}`, correct: mistakes === 0 });
+    rec.finish(`${scene.baseName} と ${scene.compareName}`);
     onResult?.(mistakes === 0);
     setStageIdx(stages.length);
   };
@@ -168,7 +174,7 @@ export const KihonRound: React.FC<{
 
   const submitAnswer = (v: string) => {
     if (Number(v) === answer) advance();
-    else { playSoftTry(); setMistakes((m) => m + 1); setHint(problem.hint); }
+    else { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); onMiss?.(); setHint(problem.hint); }
   };
 
   const questionText = missing === 'compare'

@@ -5,6 +5,7 @@
  * 「Aの倍→Bの倍→どちらが大きいか」の流れになる。
  */
 import React, { useState } from 'react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Check, Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -80,8 +81,10 @@ export const WordRound: React.FC<{
   problem?: BaiWordProblem;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaiWordProblem>(() => given ?? generateWord(level));
   const isRatio = problem.kind === 'ratio';
   const [stage, setStage] = useState<'shiki' | 'calc' | 'timesA' | 'timesB' | 'judge' | 'done'>(isRatio ? 'timesA' : 'shiki');
@@ -90,16 +93,14 @@ export const WordRound: React.FC<{
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'word-problem', skillId: level, record: recordResult });
 
   const finish = () => {
     playClear();
     confetti({ particleCount: 130, spread: 70, origin: { y: 0.6 } });
-    recordResult({
-      moduleId: 'word-problem',
-      skillId: level,
-      label: problem.text.slice(0, 18) + '…',
-      correct: mistakes === 0,
-    });
+    rec.finish(problem.text.slice(0, 18) + '…');
     onResult?.(mistakes === 0);
     setStage('done');
   };
@@ -112,7 +113,7 @@ export const WordRound: React.FC<{
       setStage('calc');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setPickedWrong(i);
       setHint('ようすを 思いうかべよう。「もとにする量」と「くらべられる量」の どちらを 求めるかで、しきが 決まるよ。');
     }
@@ -123,7 +124,7 @@ export const WordRound: React.FC<{
       finish();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`しきは ${problem.choices![problem.correctIndex!]} だね。ていねいに 計算してみよう。`);
     }
   };
@@ -135,7 +136,7 @@ export const WordRound: React.FC<{
       setStage('timesB');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`${problem.pair?.itemA}は ${problem.beforeA}${problem.pair?.unit} → ${problem.afterA}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
     }
   };
@@ -147,7 +148,7 @@ export const WordRound: React.FC<{
       setStage('judge');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(`${problem.pair?.itemB}は ${problem.beforeB}${problem.pair?.unit} → ${problem.afterB}${problem.pair?.unit}。あと ÷ まえ で 倍を もとめよう。`);
     }
   };
@@ -157,7 +158,7 @@ export const WordRound: React.FC<{
       finish();
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setPickedJudge(label);
       setHint(`倍の 大きさで くらべよう。${problem.pair?.itemA}は ${problem.timesA}倍、${problem.pair?.itemB}は ${problem.timesB}倍。今回 きかれているのは 変化が ${problem.askSmaller ? '小さい' : '大きい'}方だよ。`);
     }
@@ -175,6 +176,11 @@ export const WordRound: React.FC<{
         </div>
 
         {hint && <HintBox tone={(pickedWrong !== null && stage === 'shiki') || pickedJudge ? 'wrong' : 'hint'}>{hint}</HintBox>}
+
+
+        {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+        <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
         {!isRatio && stage === 'shiki' && (
           <div>

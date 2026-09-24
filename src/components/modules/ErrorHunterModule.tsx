@@ -4,6 +4,7 @@
  * 「見つけて → 直して → 理由を選ぶ」3ステップで学ぶ。
  */
 import React, { useState } from 'react';
+import { useRoundRecorder } from 'learning-app-kit/react';
 import { motion } from 'motion/react';
 import { ChevronLeft, Lightbulb, Search, Check, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -12,6 +13,7 @@ import { AnswerEntry } from '../shared/AnswerEntry';
 import { BaiErrorExample, generateBaiError } from '../../lib/problems';
 import { useProgressStore } from '../../store/progressStore';
 import { playClear, playSoftTry } from '../../lib/sound';
+import { ScratchPadToggle } from 'learning-app-kit/react';
 
 interface Props { onExit: () => void; }
 
@@ -52,24 +54,24 @@ export const BaiErrorRound: React.FC<{
   startStage?: 'judge' | 'fix';
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ example, startStage = 'judge', onNext, onResult, nextLabel = 'つぎの もんだい' }) => {
+}> = ({ example, startStage = 'judge', onNext, onResult, onMiss, nextLabel = 'つぎの もんだい' }) => {
   const [ex] = useState<BaiErrorExample>(() => example ?? generateBaiError());
   const [stage, setStage] = useState<'judge' | 'fix' | 'reason' | 'done'>(startStage);
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'error-hunter', skillId: ex.isCorrect ? 'eh-judge' : 'eh-fix', record: recordResult });
 
   const finish = () => {
     setStage('done');
     playClear();
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-    recordResult({
-      moduleId: 'error-hunter',
-      skillId: ex.isCorrect ? 'eh-judge' : 'eh-fix',
-      label: ex.wrongExpr,
-      correct: mistakes === 0,
-    });
+    rec.finish(ex.wrongExpr);
     onResult?.(mistakes === 0);
   };
 
@@ -80,7 +82,7 @@ export const BaiErrorRound: React.FC<{
       else setStage('fix'); // まちがいを「まちがい」と見ぬけた
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(
         ex.isCorrect
           ? 'もう一度 よく見て。もとにする量 と くらべられる量 が どちらか、式を たしかめよう。'
@@ -95,7 +97,7 @@ export const BaiErrorRound: React.FC<{
       setStage('reason');
     } else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint(ex.fixHint);
     }
   };
@@ -104,7 +106,7 @@ export const BaiErrorRound: React.FC<{
     if (i === ex.correctReasonIndex) finish();
     else {
       playSoftTry();
-      setMistakes((m) => m + 1);
+      setMistakes((m) => m + 1); rec.mistake(); onMiss?.();
       setHint('うーん、ちがうみたい。まちがった式と 正しい式を くらべて、どこが ちがうか 考えよう。');
     }
   };
@@ -129,6 +131,9 @@ export const BaiErrorRound: React.FC<{
               <Lightbulb className="text-amber-500 shrink-0" size={20} /><p className="text-muted font-bold">{hint}</p>
             </div>
           )}
+
+          {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+          <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
           {stage === 'judge' && (
             <>

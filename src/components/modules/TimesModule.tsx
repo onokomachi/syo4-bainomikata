@@ -6,6 +6,7 @@
  * 図と式はそれぞれ独立に採点される技能なので、答えの数値だけを判定しない。
  */
 import React, { useMemo, useState } from 'react';
+import { useRoundRecorder, ScratchPadToggle } from 'learning-app-kit/react';
 import confetti from 'canvas-confetti';
 import { Wand2 } from 'lucide-react';
 import { AppShell } from '../shared/AppShell';
@@ -86,8 +87,10 @@ export const TimesRound: React.FC<{
   focus?: RoundFocus;
   onNext: () => void;
   onResult?: (perfect: boolean) => void;
+  /** まちがえたとき。テストモードで「2回で×」を数えるのに使う */
+  onMiss?: () => void;
   nextLabel?: string;
-}> = ({ level, problem: given, focus = 'full', onNext, onResult, nextLabel }) => {
+}> = ({ level, problem: given, focus = 'full', onNext, onResult, onMiss, nextLabel }) => {
   const [problem] = useState<BaseTimesProblem>(() => given ?? generateTimes(level));
   const stages = useMemo<RoundFocus[]>(
     () => (focus === 'full' ? ['diagram', 'shiki', 'answer'] : [focus]),
@@ -97,18 +100,21 @@ export const TimesRound: React.FC<{
   const [mistakes, setMistakes] = useState(0);
   const [hint, setHint] = useState<string | null>(null);
   const recordResult = useProgressStore((s) => s.recordResult);
+  // できなかった問題も残す。まちがえた回数を数え、正解までたどりつかずに
+  // 離れたときも1件記録する（learning-app-kit/react）
+  const rec = useRoundRecorder({ moduleId: 'times', skillId: level, record: recordResult });
 
   const { base, times, compare, scene } = problem;
   const shiki = useMemo(() => buildShikiChoices('times', base, times, compare), [base, times, compare]);
   const isDone = stageIdx >= stages.length;
   const stage = stages[stageIdx];
 
-  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); setHint(h); };
+  const miss = (h: string) => { playSoftTry(); setMistakes((m) => m + 1); rec.mistake(); onMiss?.(); setHint(h); };
 
   const finish = () => {
     playClear();
     confetti({ particleCount: 110, spread: 65, origin: { y: 0.6 } });
-    recordResult({ moduleId: 'times', skillId: level, label: `${compare} ÷ ${base}`, correct: mistakes === 0 });
+    rec.finish(`${compare} ÷ ${base}`);
     onResult?.(mistakes === 0);
     setStageIdx(stages.length);
   };
@@ -176,6 +182,11 @@ export const TimesRound: React.FC<{
             </div>
 
             {hint && <HintBox tone="wrong">{hint}</HintBox>}
+
+
+            {/* 暗算では厳しい計算があるので、紙のかわりに書ける場所を出す（採点はしない） */}
+
+            <ScratchPadToggle ops={['×', '÷']} decimal={false} />
 
             {stage === 'shiki' && (
               <ChoiceStage
