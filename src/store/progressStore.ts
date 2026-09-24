@@ -128,20 +128,22 @@ export const useProgressStore = create<ProgressState>()(
           };
           const logs = [entry, ...state.logs].slice(0, 200);
 
+          // 授業4時間の枠内でも無理なく熟達バーが満タンになるよう、必要な連続ノーミス数を 5→3 に短縮
+          const MASTERY_STREAK = 3;
           const prev = state.mastery[rec.skillId] ?? { attempts: 0, corrects: 0, perfectStreak: 0 };
-          const newPerfectStreak = rec.correct ? Math.min((prev.perfectStreak ?? 0) + 1, 5) : 0;
+          const newPerfectStreak = rec.correct ? Math.min((prev.perfectStreak ?? 0) + 1, MASTERY_STREAK) : 0;
           const mastery = {
             ...state.mastery,
             [rec.skillId]: {
               attempts: prev.attempts + 1,
               corrects: prev.corrects + (rec.correct ? 1 : 0),
-              // 連続ノーミス：正解で +1（最大5）、ミスありの完答で 0 にリセット
+              // 連続ノーミス：正解で +1（最大 MASTERY_STREAK）、ミスありの完答で 0 にリセット
               perfectStreak: newPerfectStreak,
             },
           };
 
-          // 熟達バーが満タン（5連続ノーミス）に達したら、そのモジュールを「習熟度MAX」として永続記録
-          const masteredModules = newPerfectStreak >= 5 && !state.masteredModules[rec.moduleId]
+          // 熟達バーが満タン（MASTERY_STREAK連続ノーミス）に達したら、そのモジュールを「習熟度MAX」として永続記録
+          const masteredModules = newPerfectStreak >= MASTERY_STREAK && !state.masteredModules[rec.moduleId]
             ? { ...state.masteredModules, [rec.moduleId]: true }
             : state.masteredModules;
 

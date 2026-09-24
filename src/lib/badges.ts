@@ -32,17 +32,17 @@ export function computeBadges(d: BadgeData): Badge[] {
   const omote = d.bestTestOmote ?? 0;
   const list: Badge[] = [
     { id: 'first', title: 'はじめの一歩', desc: '1問 クリア', icon: 'Star', earned: d.totalCorrect >= 1 },
-    // がんばり（累計クリア数）
-    { id: 't20', title: 'がんばり20', desc: '累計20問 クリア', icon: 'Sparkles', earned: d.totalCorrect >= 20 },
-    { id: 't30', title: 'がんばり30', desc: '累計30問 クリア', icon: 'Medal', earned: d.totalCorrect >= 30 },
-    { id: 't50', title: 'がんばり50', desc: '累計50問 クリア', icon: 'Award', earned: d.totalCorrect >= 50 },
-    { id: 't100', title: 'がんばり100', desc: '累計100問 クリア', icon: 'Trophy', earned: d.totalCorrect >= 100 },
-    // ノーミス（連続ノーミス記録）
-    { id: 's5', title: 'ノーミス5', desc: '5問連続 ノーミス', icon: 'Flame', earned: d.maxStreak >= 5 },
-    { id: 's10', title: 'ノーミス10', desc: '10問連続 ノーミス', icon: 'Crown', earned: d.maxStreak >= 10 },
-    { id: 's20', title: 'ノーミス20', desc: '20問連続 ノーミス', icon: 'Zap', earned: d.maxStreak >= 20 },
-    { id: 's30', title: 'ノーミス30', desc: '30問連続 ノーミス', icon: 'Target', earned: d.maxStreak >= 30 },
-    { id: 's50', title: 'ノーミス50', desc: '50問連続 ノーミス', icon: 'Rocket', earned: d.maxStreak >= 50 },
+    // がんばり（累計クリア数）: 授業4時間（40分×4=160分ほど）でも無理なく届くよう、しきい値を低めに調整
+    { id: 't20', title: 'がんばり10', desc: '累計10問 クリア', icon: 'Sparkles', earned: d.totalCorrect >= 10 },
+    { id: 't30', title: 'がんばり20', desc: '累計20問 クリア', icon: 'Medal', earned: d.totalCorrect >= 20 },
+    { id: 't50', title: 'がんばり35', desc: '累計35問 クリア', icon: 'Award', earned: d.totalCorrect >= 35 },
+    { id: 't100', title: 'がんばり50', desc: '累計50問 クリア', icon: 'Trophy', earned: d.totalCorrect >= 50 },
+    // ノーミス（連続ノーミス記録）: 同じく4時間の授業内で達成できる範囲に短縮
+    { id: 's5', title: 'ノーミス3', desc: '3問連続 ノーミス', icon: 'Flame', earned: d.maxStreak >= 3 },
+    { id: 's10', title: 'ノーミス5', desc: '5問連続 ノーミス', icon: 'Crown', earned: d.maxStreak >= 5 },
+    { id: 's20', title: 'ノーミス10', desc: '10問連続 ノーミス', icon: 'Zap', earned: d.maxStreak >= 10 },
+    { id: 's30', title: 'ノーミス15', desc: '15問連続 ノーミス', icon: 'Target', earned: d.maxStreak >= 15 },
+    { id: 's50', title: 'ノーミス25', desc: '25問連続 ノーミス', icon: 'Rocket', earned: d.maxStreak >= 25 },
     // 本番テスト（表・知識技能のみ満点100。この単元のテストに「裏50点」は無いため、
     // 裏・両面（表＋裏）のバッジは作らない：uraMaxが常に0のため永久に獲得できず、
     // 最終称号を含む全バッジ未達成を招くバグになるのを避けている）
@@ -50,10 +50,10 @@ export function computeBadges(d: BadgeData): Badge[] {
     { id: 'to75', title: 'テスト75', desc: 'テストで 75点いじょう', icon: 'ClipboardCheck', earned: omote >= 75 },
     { id: 'to90', title: 'テスト90', desc: 'テストで 90点いじょう', icon: 'ClipboardCheck', earned: omote >= 90 },
     { id: 'to100', title: 'テスト満点', desc: 'テストで 100点', icon: 'Trophy', earned: omote >= 100 },
-    // くり返し満点（高難度・2段階）: 一度の満点より ずっと むずかしい「安定して満点」を評価する。
-    // 10回は子どもには挫折ラインになりやすいため、上限は5回までにとどめる。
-    { id: 'to100x3', title: 'テストマイスターI', desc: 'テストで 満点を 3回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 3 },
-    { id: 'to100x5', title: 'テストマイスターII', desc: 'テストで 満点を 5回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 5 },
+    // くり返し満点（高難度・2段階）: 授業4時間ではテストに挑戦できる回数自体が限られるため、
+    // 「安定して満点」の評価は 2回・3回 に短縮する。
+    { id: 'to100x3', title: 'テストマイスターI', desc: 'テストで 満点を 2回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 2 },
+    { id: 'to100x5', title: 'テストマイスターII', desc: 'テストで 満点を 3回', icon: 'ShieldCheck', earned: (d.testPerfectCounts?.omote ?? 0) >= 3 },
   ];
   MODULES.forEach((m) =>
     list.push({
