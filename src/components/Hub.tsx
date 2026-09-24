@@ -223,7 +223,7 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
             {bossUnlocked ? <Swords size={30} /> : <Lock size={26} />}
           </div>
           <div className="flex-1">
-            <div className="text-xl font-black flex items-center gap-2">⚡ ボス戦：天空神</div>
+            <div className="text-xl font-black flex items-center gap-2">⌛ ボス戦：時空神</div>
             <div className={`text-sm font-medium ${bossUnlocked ? 'text-white/85' : 'text-faint'}`}>
               {bossUnlocked ? '正解でポイントを貯めて、こうげき・かいふく・ガードを選びながら戦おう！' : `スノーワールドを 解放すると 挑戦できます（${THEME_UNLOCK[BOSS_UNLOCK_THEME].label}）`}
             </div>
