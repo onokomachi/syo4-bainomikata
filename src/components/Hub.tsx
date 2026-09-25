@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sprout, Divide, X, Undo2, Scale, Search, BookOpen,
-  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame, Swords, RotateCcw, Mountain,
+  History, Settings as SettingsIcon, Lock, ClipboardCheck, ChevronRight, Flame, Swords, RotateCcw,
 } from 'lucide-react';
 import { MODULES, ModuleMeta } from '../constants';
 import { ModuleId, useProgressStore } from '../store/progressStore';
@@ -15,6 +15,8 @@ import { GoalRing } from './ui/GoalRing';
 import { getDueReviewTargets, getReviewTargets } from '../lib/review';
 import { useBadgeRatio } from '../lib/useBadgeRatio';
 import { THEME_UNLOCK, isThemeUnlocked } from '../lib/themeUnlock';
+import { TrialCard } from 'learning-app-kit/react';
+import { FLOOR_COUNT } from '../lib/trialConfig';
 
 interface Props {
   onSelectModule: (id: ModuleId) => void;
@@ -156,23 +158,6 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           <ChevronRight size={28} className="shrink-0 opacity-80" />
         </motion.button>
 
-        {/* 神域の試練（単元の中の実力チェック）。本番テストのすぐ下に置く */}
-        <motion.button
-          whileHover={{ y: -3 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={onStartTrial}
-          className="w-full -mt-3 mb-6 p-5 rounded-[24px] bg-[radial-gradient(ellipse_at_left,#16224a_0%,#050811_70%)] text-white border border-cyan-300/30 shadow-[0_0_40px_-18px_rgba(103,232,249,0.9)] hover:shadow-[0_0_50px_-14px_rgba(103,232,249,1)] text-left transition-all flex items-center gap-4"
-        >
-          <div className="w-14 h-14 rounded-2xl bg-cyan-300/15 text-cyan-200 flex items-center justify-center shrink-0 border border-cyan-300/30">
-            <Mountain size={28} />
-          </div>
-          <div className="flex-1">
-            <div className="text-[10px] tracking-[0.4em] text-cyan-300/80 font-black">SANCTUM TRIAL</div>
-            <div className="text-xl font-black">神域の試練</div>
-            <div className="text-sm text-white/70 font-medium">いまの じぶんは どの層まで 登れる？　極限・無限</div>
-          </div>
-          <ChevronRight size={28} className="shrink-0 opacity-80" />
-        </motion.button>
 
         {/* きょうの ふくしゅう（間隔反復: できていたことを、わすれないうちに もういちど） */}
         {dueTargets.length > 0 && (
@@ -249,6 +234,11 @@ export const Hub: React.FC<Props> = ({ onSelectModule, onOpenLog, onStartTest, o
           </div>
           {bossUnlocked && <ChevronRight size={28} className="shrink-0 opacity-80" />}
         </motion.button>
+
+        {/* 神域の試練（単元の中の実力チェック）。ハブのいちばん下に置く */}
+        <div className="mt-6">
+          <TrialCard appId="bai" floors={FLOOR_COUNT} onClick={onStartTrial} />
+        </div>
       </div>
 
       <AnimatePresence>
