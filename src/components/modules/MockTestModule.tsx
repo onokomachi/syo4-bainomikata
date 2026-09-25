@@ -17,6 +17,7 @@ import { BaseRound } from './BaseModule';
 import { RatioCompareRound } from './RatioCompareModule';
 import { WordRound } from './WordProblemModule';
 import { BaiErrorRound } from './ErrorHunterModule';
+import { forceSolo } from 'learning-app-kit/sync';
 
 interface Props {
   onExit: () => void;
@@ -57,9 +58,12 @@ export const MockTestModule: React.FC<Props> = ({ onExit, onPractice }) => {
   );
 
   const choose = (m: Mode) => {
+    // 本番テストは実力を測る場面。ペア（1台を2人）のままなら、ここでソロに切り替える
+    forceSolo();
     setMode(m); setIndex(0); setResults({}); setMisses({}); setGaveUp({}); setRecorded(false); setPhase('RUN');
   };
   const restart = () => {
+    forceSolo();
     setSeed((s) => s + 1); setIndex(0); setResults({}); setMisses({}); setGaveUp({}); setRecorded(false); setPhase('RUN');
   };
 
