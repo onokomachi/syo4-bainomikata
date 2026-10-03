@@ -32,7 +32,7 @@ export const TimesModule: React.FC<Props> = ({ onExit }) => {
   const [round, setRound] = useState(0);
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
-  const adaptive = useAdaptive<TimesLevel>(LEVEL_IDS, 'times');
+  const adaptive = useAdaptive<TimesLevel>(LEVEL_IDS);
 
   if (mode === 'setup') {
     return (

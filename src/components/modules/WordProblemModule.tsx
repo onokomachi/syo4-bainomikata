@@ -27,7 +27,7 @@ export const WordProblemModule: React.FC<Props> = ({ onExit }) => {
   const [round, setRound] = useState(0);
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
-  const adaptive = useAdaptive<WordLevel>(LEVEL_IDS, 'wp');
+  const adaptive = useAdaptive<WordLevel>(LEVEL_IDS);
 
   if (mode === 'setup') {
     return (

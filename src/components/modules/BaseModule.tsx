@@ -33,7 +33,7 @@ export const BaseModule: React.FC<Props> = ({ onExit }) => {
   const [round, setRound] = useState(0);
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
-  const adaptive = useAdaptive<BaseLevel>(LEVEL_IDS, 'base');
+  const adaptive = useAdaptive<BaseLevel>(LEVEL_IDS);
 
   if (mode === 'setup') {
     return (
