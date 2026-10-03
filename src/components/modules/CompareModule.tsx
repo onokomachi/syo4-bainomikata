@@ -31,7 +31,7 @@ export const CompareModule: React.FC<Props> = ({ onExit }) => {
   const [round, setRound] = useState(0);
   const getMasteryStreak = useProgressStore((s) => s.getMasteryStreak);
   const getTodaySkillCount = useProgressStore((s) => s.getTodaySkillCount);
-  const adaptive = useAdaptive<CompareLevel>(LEVEL_IDS, 'compare');
+  const adaptive = useAdaptive<CompareLevel>(LEVEL_IDS);
 
   if (mode === 'setup') {
     return (
