@@ -29,15 +29,16 @@ import { BaseRound } from './BaseModule';
 import { RatioCompareRound } from './RatioCompareModule';
 import { WordRound } from './WordProblemModule';
 import { BaiErrorRound } from './ErrorHunterModule';
+import { media } from '../../lib/media';
 
 interface Props { onExit: () => void; }
 
 const BOSS_NAME = '時空神';
 const UNLOCK_THEME = 'snow'; // わり算ランド版は inferno(75%)。この単元はスノーワールドが75%層。
 const VIDEO = {
-  idle: '/videos/boss/1.mp4',
-  normal: '/videos/boss/2.mp4',
-  special: '/videos/boss/3.mp4',
+  idle: media('/videos/bai/boss/1.mp4'),
+  normal: media('/videos/bai/boss/2.mp4'),
+  special: media('/videos/bai/boss/3.mp4'),
 };
 
 type Phase = 'INTRO' | 'BATTLE' | 'RESULT';
