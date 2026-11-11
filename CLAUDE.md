@@ -6,6 +6,7 @@
 - 単元ごとの中身（問題の作り方・モジュール・本番テスト・実力の階段の段）は `src/lib/problems*`・`src/constants.ts`・
   `src/lib/testConfig.ts`・`src/lib/trialConfig.ts`・`src/components/modules/` にある。ここは自由に直してよい。
 - おまかせモードの習熟度は「記録に残した skillId」で引く。レベルIDと記録の名前がちがうモジュールだけ `useAdaptive(ids, toSkillId)`。
+- **熟達は5問れんぞくノーミス**（`progressStore.ts` の `MASTERY_STREAK`。2026-11-11。前は3にしていて、SANMON の町（倍の見方）の「練習」の条件＝5れんぞくに だれも届かなかった）。ほかの算数アプリと同じ5にそろえておく。
 - **動画・画像などの大きな素材は、このアプリの `public/` に入れない**（2026-11-05）。共通置き場 `onokomachi/learning-media`（`https://learning-media-snowy.vercel.app`）に置き、`src/lib/media.ts` の `media('/videos/…')` で読む。
   `public/` に入れると、直すたびのデプロイで同じ動画が丸ごと保存され、Vercel の Deployment Storage（10GB）を使いきる。置き場のファイルは上書きしない（新しい名前で足す）。
 

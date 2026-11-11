@@ -77,8 +77,10 @@ export interface SkillMastery {
   perfectStreak?: number; // 連続ノーミス数（熟達バー表示用。ミスで0にリセット）
 }
 
-// 授業4時間の枠内でも無理なく熟達バーが満タンになるよう、必要な連続ノーミス数を 5→3 に短縮
-const MASTERY_STREAK = 3;
+// 熟達＝5問れんぞくノーミス（学級ポータル・SANMON の町の解放と同じ基準。2026-11-11 先生と決めた）。
+// 前は授業時間に合わせて 3 にしていたが、SANMON は 5 を見るので この単元の町が開かなかった。
+// すでに「習熟度MAX」になったモジュールの記録（masteredModules）はそのまま残る
+const MASTERY_STREAK = 5;
 
 /** skillId のプレフィックスから所属モジュールを判定 */
 export function skillToModuleId(skillId: string): ModuleId | null {
